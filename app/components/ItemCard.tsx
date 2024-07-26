@@ -3,16 +3,16 @@ import Image from "next/image";
 import React, { useState } from 'react';
 
   interface ItemCardProps {
-    id: number;
-    handleDelete: (id: number) => void;
-    onDataChange: (id: number, data: {itemName: string, link: string, image: string}) => void;
+    id: string;
+    handleDelete: (id: string) => void;
+    onDataChange: (id: string, data: {itemName: string, link: string, image: string}) => void;
   }
 
   export const ItemCard:React.FC<ItemCardProps> = ({ id, handleDelete, onDataChange }) =>  {
     const [itemName, setItemName] = useState("");
     const [link, setLink] = useState("");
     const [image, setImage] = useState("");
-    const handleDataChange = (id: number) => {
+    const handleDataChange = (id: string) => {
         onDataChange(id, { itemName, link, image });
       };
     return (

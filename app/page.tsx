@@ -9,26 +9,26 @@ import { v4 as uuidv4 } from 'uuid';
 
 
 interface Item {
-  id: number;
+  id: string;
   data: {itemName: string, link: string, image: string}
 }
 
 export default function Home() {
 
   const [items, setItems] = useState<Item[]>([]);
-  const [toDelete, setToDelete] = useState<number[]>([]);
+  const [toDelete, setToDelete] = useState<string[]>([]);
   const [ownerid, setOwnerID] = useState<string>();
   const [listName, setListName] = useState<string>("");
   const addItem = () => {
     const newItem: Item = { id: uuidv4(), data:{itemName: "", link: "", image: "/add_image.svg"}};
     setItems([...items, newItem]);
   }
-  const handleDelete = (id: number) => {
+  const handleDelete = (id: string) => {
     const updatedItems = items.filter(item => item.id !== id);
     setToDelete([...toDelete, id]);
     setItems(updatedItems);
   };
-  const handleDataChange = (id: number, data: {itemName: string, link: string, image: string}) => {
+  const handleDataChange = (id: string, data: {itemName: string, link: string, image: string}) => {
     const updatedItems = [...items];
     updatedItems.map(item => {
       if(item.id == id){
@@ -60,7 +60,6 @@ export default function Home() {
             }else{
               const listOfData = items.map(item => item.data);
               const ids = items.map(item => item.id);
-              ids.map(id => console.log(id + " " + listOfData[ids.indexOf(id)]));
               saveList(ownerid, ids, toDelete, listOfData);
               setToDelete([]);
             }
