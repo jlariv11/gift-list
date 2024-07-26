@@ -1,43 +1,77 @@
 "use client"
-import Image from "next/image";
 import React, {useState} from "react";
 import { Input } from "@nextui-org/input";
+import Image from "next/image";
+import { ItemCard } from "./components/ItemCard";
+import { createList, saveList } from './SQLManager';
+import { startTransition } from "react";
+import { list } from "postcss";
 
-const ItemCard = () => {
-  return (
-    <div>
-        <div className="w-1/2 border-red-700 border-2 flex justify-between mt-2 ml-2">
-          <Input className="pl-2" type="text" placeholder="Item Name" />
-          <a className="text-blue-700 underline" href="www.google.com">Link</a>
-          <div>
-            <Image width={50} height={50} src={"/add_image.svg"} alt="List Image"/>
-            <a>Add Image</a>
-          </div>
-        </div>
-    </div>
-  )
+
+interface Item {
+  id: number;
+  data: {itemName: string, link: string, image: string}
 }
 
 export default function Home() {
-  const [items, setItems] = useState<JSX.Element[]>([]);
 
-  const addItem = () =>{
-    setItems([...items, <ItemCard key={items.length} />]);
-  } 
+  const [items, setItems] = useState<Item[]>([]);
+  const [toDelete, setToDelete] = useState<number[]>([]);
+  const [toUpdate, setToUpdate] = useState<number[]>([]);
+  const [ownerid, setOwnerID] = useState<string>();
+  const [listName, setListName] = useState<string>("");
+  const addItem = () => {
+    const newItem: Item = { id: Date.now(), data:{itemName: "", link: "", image: "/add_image.svg"}};
+    setItems([...items, newItem]);
+  }
+  const handleDelete = (id: number) => {
+    const updatedItems = items.filter(item => item.id !== id);
+    const updatedToUpdate = toUpdate.filter(item => item !== id);
+    setToUpdate(updatedToUpdate);
+    setToDelete([...toDelete, id]);
+    setItems(updatedItems);
+  };
+  const handleDataChange = (id: number, data: {itemName: string, link: string, image: string}) => {
+    const updatedItems = [...items];
+    updatedItems.map(item => {
+      if(item.id == id){
+        item.data = data;
+      }
+    });
+    setToUpdate([...toUpdate, id]);
+    setItems(updatedItems);
+  }
   return (
-    <main className="">
-      <Input className="w-1/2 p-2 border-2 border-black" type="text" placeholder="List Name" />
+    <main className="mt-2 ml-2">
+      <Input className="w-1/2 p-2 border-2 border-black text-black" type="text" placeholder="List Name" onChange={(e) => setListName(e.target.value)}/>
       <div className="w-1/2 border-2 border-black mt-2 pb-2">
-      <Image className="border-2 border-black hover:bg-red-700 mt-2 ml-2" onClick={addItem} width={30} height={30} src={"/add_list_item.svg"} alt="Add Item"/>
-      {items}
+      <Image className="border-2 border-black hover:bg-red-700 mt-2 ml-2 hover:cursor-pointer" onClick={addItem} width={30} height={30} src={"/add_list_item.svg"} alt="Add Item"/>
+      {items.map(item => (
+        <ItemCard key={item.id} id={item.id} handleDelete={handleDelete} onDataChange={handleDataChange} />
+      ))}
       </div>
       <div className="w-1/2 flex justify-between mt-2">
-        <div className="border-2 border-black hover:bg-red-700">
+        <div className="text-black border-2 border-black hover:bg-red-700 hover:cursor-pointer">
           Share List
         </div>
-        <div className="border-2 border-black hover:bg-red-700">
+        <div className="text-black border-2 border-black hover:bg-red-700 hover:cursor-pointer" onClick={(e) =>
+          startTransition(async () => {
+            if(ownerid == null || ownerid == ""){
+              const listOfData = items.map(item => item.data);
+              const ids = items.map(item => item.id);
+              setOwnerID(await createList(ids, toDelete, toUpdate, listOfData, listName));
+            }else{
+              const listOfData = items.map(item => item.data);
+              const ids = items.map(item => item.id);
+              saveList(ownerid, ids, toDelete, toUpdate, listOfData);
+            }
+          })
+        }>
           Save List
         </div>
+      </div>
+      <div className="text-black">
+        <a>Owner ID: {ownerid}</a>
       </div>
     </main>
   );
