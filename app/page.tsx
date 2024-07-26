@@ -5,7 +5,7 @@ import Image from "next/image";
 import { ItemCard } from "./components/ItemCard";
 import { createList, saveList } from './SQLManager';
 import { startTransition } from "react";
-import { list } from "postcss";
+import { v4 as uuidv4 } from 'uuid';
 
 
 interface Item {
@@ -17,17 +17,14 @@ export default function Home() {
 
   const [items, setItems] = useState<Item[]>([]);
   const [toDelete, setToDelete] = useState<number[]>([]);
-  const [toUpdate, setToUpdate] = useState<number[]>([]);
   const [ownerid, setOwnerID] = useState<string>();
   const [listName, setListName] = useState<string>("");
   const addItem = () => {
-    const newItem: Item = { id: Date.now(), data:{itemName: "", link: "", image: "/add_image.svg"}};
+    const newItem: Item = { id: uuidv4(), data:{itemName: "", link: "", image: "/add_image.svg"}};
     setItems([...items, newItem]);
   }
   const handleDelete = (id: number) => {
     const updatedItems = items.filter(item => item.id !== id);
-    const updatedToUpdate = toUpdate.filter(item => item !== id);
-    setToUpdate(updatedToUpdate);
     setToDelete([...toDelete, id]);
     setItems(updatedItems);
   };
@@ -38,7 +35,6 @@ export default function Home() {
         item.data = data;
       }
     });
-    setToUpdate([...toUpdate, id]);
     setItems(updatedItems);
   }
   return (
@@ -59,11 +55,14 @@ export default function Home() {
             if(ownerid == null || ownerid == ""){
               const listOfData = items.map(item => item.data);
               const ids = items.map(item => item.id);
-              setOwnerID(await createList(ids, toDelete, toUpdate, listOfData, listName));
+              setOwnerID(await createList(ids, toDelete, listOfData, listName));
+              setToDelete([]);
             }else{
               const listOfData = items.map(item => item.data);
               const ids = items.map(item => item.id);
-              saveList(ownerid, ids, toDelete, toUpdate, listOfData);
+              ids.map(id => console.log(id + " " + listOfData[ids.indexOf(id)]));
+              saveList(ownerid, ids, toDelete, listOfData);
+              setToDelete([]);
             }
           })
         }>
