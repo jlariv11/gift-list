@@ -6,7 +6,7 @@ export async function createList(ids: string[], toDelete: string[], items: {item
         const { rows } = await sql`SELECT set_unique_code() as code`;
         const code = String(rows[0].code);
         await sql`INSERT INTO LIST VALUES (${code}, null, ${listName})`;
-        saveList(code, ids, toDelete, items);
+        saveList(code, listName, ids, toDelete, items);
         return code;
       } catch (error) {
         console.error('Error executing stored procedure:', error);
@@ -14,7 +14,7 @@ export async function createList(ids: string[], toDelete: string[], items: {item
       }
 }
 
-export async function saveList(code: string, ids: string[], toDelete: string[], items: {itemName: string, link: string, image: string}[]): Promise<void> {
+export async function saveList(code: string, listName: string, ids: string[], toDelete: string[], items: {itemName: string, link: string, image: string}[]): Promise<void> {
     try {
         toDelete.map(async id =>{
             await sql`DELETE FROM ENTRY WHERE id=${id} AND ownerid=${code}`;
@@ -23,6 +23,7 @@ export async function saveList(code: string, ids: string[], toDelete: string[], 
             var itemData = items[ids.indexOf(id)];
             await sql`INSERT INTO ENTRY VALUES(${code}, ${itemData.itemName}, ${itemData.link}, ${itemData.image}, 1, ${id})`;
         });
+        await sql`UPDATE LIST SET NAME=${listName} WHERE ownerid=${code}`;
     } catch (error) {
         console.error('Error executing stored procedure:', error);
     }
