@@ -2,7 +2,7 @@
 import React, {useState} from "react";
 import { Input } from "@nextui-org/input";
 import Image from "next/image";
-import { ItemCard } from "./components/ItemCard";
+import { ItemCard, ItemCardShared } from "./components/ItemCard";
 import { createList, saveList, loadList, ListData } from './SQLManager';
 import { startTransition } from "react";
 import { v4 as uuidv4 } from 'uuid';
@@ -46,6 +46,7 @@ export default function Home() {
       <Image className="border-2 border-black hover:bg-red-700 mt-2 ml-2 hover:cursor-pointer" onClick={addNewItem} width={30} height={30} src={"/add_list_item.svg"} alt="Add Item"/>
       {items.map(item => (
         <ItemCard key={item.id} id={item.id} name={item.data.itemName} itemLink={item.data.link} itemImage={item.data.image} handleDelete={handleDelete} onDataChange={handleDataChange} />
+        //<ItemCardShared key={item.id} id={item.id} name={item.data.itemName} itemLink={item.data.link} itemImage={item.data.image} />
       ))}
       </div>
       <div className="w-1/2 flex justify-between mt-2">
