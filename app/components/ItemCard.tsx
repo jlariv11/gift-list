@@ -34,18 +34,18 @@ import {Card, CardHeader, CardBody} from "@nextui-org/react";
     return (
       
       <div>
-        <Card className="py-4 bg-slate-800 mb-10 rounded-xl w-1/2">
+        <Card className="py-4 bg-slate-800 mb-10 rounded-xl">
       <CardHeader className="pb-0 pt-2 px-4 flex-col items-start">
       <Input className="pl-2 pb-2 text-black" type="text" placeholder="Item Name" defaultValue={itemName} onChange = {(e) => setItemName(e.target.value)} onBlur = {() => handleDataChange(id)}/>
       <Input className="pl-2 pb-2 text-black" type="text" placeholder="Insert Link" defaultValue={link} onChange = {(e) => setLink(e.target.value)} onBlur = {() => handleDataChange(id)}/>
       </CardHeader>
-      <CardBody className="overflow-visible py-2 pl-2">
+      <CardBody className="overflow-visible py-2 pl-2 flex-wrap justify-center items-center">
       <Image className="pb-2" width={270} height={270} src={image} loader={imageLoader} alt="List Image" onClick={() => setLinkHidden(!imageLinkHidden)}/>
       <Input className="pl-2 text-black" type="text" placeholder="Insert Image Link" defaultValue={image=="/add_image.svg" ? "" : image} onChange = {(e) => setImage(e.target.value)} onBlur = {() => handleDataChange(id)} hidden={imageLinkHidden}/>
-      <div className="text-red-700 font-bold hover:cursor-pointer" onClick={() => handleDelete(id)}>
-            DELETE
-          </div>
       </CardBody>
+      <div className="pl-2 pt-2 text-red-700 font-bold hover:cursor-pointer" onClick={() => handleDelete(id)}>
+            DELETE
+      </div>
     </Card>
       </div>
     )
