@@ -3,7 +3,7 @@ import React, {useState} from "react";
 import { Input } from "@nextui-org/input";
 import Image from "next/image";
 import { ItemCard, ItemCardShared } from "./components/ItemCard";
-import { createList, saveList, loadList, ListData } from './SQLManager';
+import { createList, saveList, loadList, ListData, generateShareCode } from './SQLManager';
 import { startTransition } from "react";
 import { v4 as uuidv4 } from 'uuid';
 
@@ -18,12 +18,16 @@ export default function Home() {
   const [items, setItems] = useState<Item[]>([]);
   const [toDelete, setToDelete] = useState<string[]>([]);
   const [ownerid, setOwnerID] = useState<string>();
+  const [shareid, setShareID] = useState<string>();
   const [listName, setListName] = useState<string>("");
-  const [viewOnly, setViewOnly] = useState<boolean>(false);
-  var tempID = "";
+  const [isShared, setShared] = useState<boolean>(true);
+  const [ownerInput, setOwnerInput] = useState<string>("");
+  const [shareInput, setShareInput] = useState<string>("");
   const addNewItem = () => {
-    const newItem: Item = { id: uuidv4(), data:{itemName: "", link: "", image: "/add_image.svg"}};
-    setItems([...items, newItem]);
+    if(!isShared){
+      const newItem: Item = { id: uuidv4(), data:{itemName: "", link: "", image: "/add_image.svg"}};
+      setItems([...items, newItem]);
+    }
   }
   const handleDelete = (id: string) => {
     const updatedItems = items.filter(item => item.id !== id);
@@ -41,21 +45,34 @@ export default function Home() {
   }
   return (
     <main className="mt-2 ml-2">
-      <Input className="w-1/2 p-2 border-2 border-black text-black" type="text" placeholder="List Name" value={listName} onChange={(e) => setListName(e.target.value)} title={listName}/>
-      <div className="w-1/2 border-2 border-black mt-2 pb-2">
-      <Image className="border-2 border-black hover:bg-red-700 mt-2 ml-2 hover:cursor-pointer" onClick={addNewItem} width={30} height={30} src={"/add_list_item.svg"} alt="Add Item"/>
-      {items.map(item => (
-        <ItemCard key={item.id} id={item.id} name={item.data.itemName} itemLink={item.data.link} itemImage={item.data.image} handleDelete={handleDelete} onDataChange={handleDataChange} />
-        //<ItemCardShared key={item.id} id={item.id} name={item.data.itemName} itemLink={item.data.link} itemImage={item.data.image} />
-      ))}
+      <Input className="w-1/2 p-2 border-2 border-white text-black" type="text" placeholder="List Name" value={listName} onChange={(e) => setListName(e.target.value)} title={listName}/>
+      <div className="w-1/2 border-2 border-white mt-2 pb-2">
+      <Image className="border-2 border-white hover:bg-red-700 mt-2 ml-2 hover:cursor-pointer" onClick={addNewItem} width={30} height={30} src={"/add_list_item.svg"} alt="Add Item" hidden={isShared}/>
+      {items.map(item => {
+        if((shareid !== null || shareid !== "") && (ownerid == null || ownerid == "")){
+          return <ItemCardShared key={item.id} id={item.id} name={item.data.itemName} itemLink={item.data.link} itemImage={item.data.image} />
+        }else{
+          return <ItemCard key={item.id} id={item.id} name={item.data.itemName} itemLink={item.data.link} itemImage={item.data.image} handleDelete={handleDelete} onDataChange={handleDataChange} />
+        }
+      })}
       </div>
       <div className="w-1/2 flex justify-between mt-2">
-        <div className="text-black border-2 border-black hover:bg-red-700 hover:cursor-pointer">
+        <div className="text-white border-2 border-white hover:bg-red-700 hover:cursor-pointer" onClick={(e) => {
+          if(ownerid !== undefined){
+            startTransition(async () => {
+              const test = await generateShareCode(ownerid);
+              setShareID(test);
+            })
+        }
+        }}>
           Share List
         </div>
-        <div className="text-black border-2 border-black hover:bg-red-700 hover:cursor-pointer" onClick={(e) =>
+        <div className="text-white border-2 border-white hover:bg-red-700 hover:cursor-pointer" onClick={(e) =>
           startTransition(async () => {
-            if(ownerid == null || ownerid == ""){
+            if((shareid !== null && shareid !== "")){
+              return;
+            }
+            if((ownerid == null || ownerid == "")){
               const listOfData = items.map(item => item.data);
               const ids = items.map(item => item.id);
               setOwnerID(await createList(ids, toDelete, listOfData, listName));
@@ -71,17 +88,19 @@ export default function Home() {
           Save List
         </div>
       </div>
-      <div className="text-black">
-        <a>Owner ID: {ownerid}</a>
+      <div className="text-white">
+        <div>Owner ID: {ownerid}</div>
+        <div>Share ID: {shareid}</div>
       </div>
-      <div className="w-1/2 border-black border-2 mt-4">
+      <div className="w-1/2 border-white text-white border-2 mt-4">
         Insert OwnerID: 
-        <Input className="w-1/2 p-2 border-2 border-black text-black" type="text" placeholder="OwnerID" onChange={(e) => tempID = e.target.value}/>
+        <Input className="w-1/2 p-2 border-2 border-white text-white" type="text" placeholder="OwnerID" value={ownerInput} onChange={(e) => {setOwnerInput(e.target.value); setShared(false)}} />
         Insert ShareID: 
-        <Input className="w-1/2 p-2 border-2 border-black text-black" type="text" placeholder="ShareID" onChange={(e) => tempID = e.target.value} />
-        <div className="w-1/2 text-black border-2 border-black hover:bg-red-700 hover:cursor-pointer text-center" 
+        <Input className="w-1/2 p-2 border-2 border-white text-white" type="text" placeholder="ShareID" value={shareInput} onChange={(e) => {setShareInput(e.target.value); setShared(true)}} />
+        <div className="w-1/2 text-white border-2 border-white hover:bg-red-700 hover:cursor-pointer text-center" 
         onClick={() => {
-          startTransition(async () => {  const data = await loadList(tempID);
+          startTransition(async () => {  
+            const data = await loadList(isShared ? shareInput : ownerInput);
             setListName(data.listName);
             const newItems = [];
             for(var i = 0; i < data.itemIDs.length; i++){
@@ -90,7 +109,17 @@ export default function Home() {
             }
             setItems(newItems);
           }); 
-          setOwnerID(tempID);
+          if(isShared){
+            setShareID(shareInput);
+            setOwnerInput("");
+            setShareInput("");
+            setOwnerID("");
+          }else{
+            setOwnerID(ownerInput);
+            setOwnerInput("");
+            setShareInput("");
+            setShareID("");
+          }
           } }>
           Load List
         </div>

@@ -14,6 +14,23 @@ export async function createList(ids: string[], toDelete: string[], items: {item
       }
 }
 
+export async function generateShareCode(ownerid: string): Promise<string>{
+    try{
+        const x = await sql`SELECT shareid FROM LIST WHERE ownerid=${ownerid}`;
+        if(x.rows[0].shareid == null){
+            const rows = await sql`SELECT set_unique_share_code() as shareid`
+            const shareid = String(rows.rows[0].shareid);
+            await sql`UPDATE LIST SET shareid=${shareid} WHERE ownerid=${ownerid}`;
+            return shareid;
+        }else{
+            return String(x.rows[0].shareid);
+        }
+    }catch (error){
+        console.error('Error executing stored procedure:', error);
+        return "";
+    }
+}
+
 export async function saveList(code: string, listName: string, ids: string[], toDelete: string[], items: {itemName: string, link: string, image: string}[]): Promise<void> {
     try {
         toDelete.map(async id =>{
@@ -40,8 +57,8 @@ export interface ListData {
 
 export async function loadList(code: string): Promise<ListData> {
     try{
-        const listName = await sql`SELECT name FROM LIST WHERE ownerid=${code}`;
-        const listEntries = await sql`SELECT name, link, image, quantity, id FROM ENTRY WHERE ownerid=${code}`;
+        const listName = await sql`SELECT name FROM LIST WHERE ownerid=${code} OR shareid=${code}`;
+        const listEntries = await sql`SELECT name, link, image, quantity, id FROM ENTRY WHERE ownerid=${code} OR ownerid=(SELECT ownerid FROM LIST WHERE shareid=${code})`;
         var dataOut = {listName: "", itemNames: [], itemLinks: [], itemImages: [], itemQuantities: [], itemIDs: []};
         dataOut.listName = listName.rows[0].name;
         listEntries.rows.forEach(entry => {
