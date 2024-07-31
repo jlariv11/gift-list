@@ -1,7 +1,15 @@
 "use server"
 import { sql } from "@vercel/postgres";
 
-export async function createList(ids: string[], toDelete: string[], items: {itemName: string, link: string, image: string}[], listName: string): Promise<string> {
+export interface ItemData {
+    itemName: string, 
+    link: string, 
+    image: string, 
+    purchased: boolean,
+    quantity: number
+}
+
+export async function createList(ids: string[], toDelete: string[], items: ItemData[], listName: string): Promise<string> {
     try {
         const { rows } = await sql`SELECT set_unique_code() as code`;
         const code = String(rows[0].code);
@@ -31,16 +39,23 @@ export async function generateShareCode(ownerid: string): Promise<string>{
     }
 }
 
-export async function saveList(code: string, listName: string, ids: string[], toDelete: string[], items: {itemName: string, link: string, image: string}[]): Promise<void> {
+export async function saveList(code: string, listName: string, ids: string[], toDelete: string[], items: ItemData[]): Promise<void> {
     try {
-        toDelete.map(async id =>{
-            await sql`DELETE FROM ENTRY WHERE id=${id} AND ownerid=${code}`;
-        });
+        var isShareCode = await sql`SELECT 1 from LIST WHERE shareid=${code}`;
+        if(!isShareCode){
+            toDelete.map(async id =>{
+                await sql`DELETE FROM ENTRY WHERE id=${id} AND ownerid=${code}`;
+            });
+            await sql`UPDATE LIST SET NAME=${listName} WHERE ownerid=${code}`;
+        }
         ids.map(async id => {
             var itemData = items[ids.indexOf(id)];
-            await sql`INSERT INTO ENTRY VALUES(${code}, ${itemData.itemName}, ${itemData.link}, ${itemData.image}, 1, ${id})`;
+            if(isShareCode){
+                await sql`UPDATE ENTRY SET purchased=${itemData.purchased} WHERE ownerid=(SELECT ownerid FROM LIST WHERE shareid=${code}) AND id=${id}`;
+            }else{
+                await sql`INSERT INTO ENTRY VALUES(${code}, ${itemData.itemName}, ${itemData.link}, ${itemData.image}, ${itemData.quantity}, ${id}, ${itemData.purchased})`;
+            }
         });
-        await sql`UPDATE LIST SET NAME=${listName} WHERE ownerid=${code}`;
     } catch (error) {
         console.error('Error executing stored procedure:', error);
     }
@@ -52,25 +67,27 @@ export interface ListData {
     itemLinks: string[],
     itemImages: string[],
     itemQuantities: number[],
+    itemPurchased: boolean[],
     itemIDs: string[]
 }
 
 export async function loadList(code: string): Promise<ListData> {
     try{
         const listName = await sql`SELECT name FROM LIST WHERE ownerid=${code} OR shareid=${code}`;
-        const listEntries = await sql`SELECT name, link, image, quantity, id FROM ENTRY WHERE ownerid=${code} OR ownerid=(SELECT ownerid FROM LIST WHERE shareid=${code})`;
-        var dataOut = {listName: "", itemNames: [], itemLinks: [], itemImages: [], itemQuantities: [], itemIDs: []};
+        const listEntries = await sql`SELECT name, link, image, quantity, purchased, id FROM ENTRY WHERE ownerid=${code} OR ownerid=(SELECT ownerid FROM LIST WHERE shareid=${code})`;
+        var dataOut = {listName: "", itemNames: [], itemLinks: [], itemImages: [], itemQuantities: [], itemPurchased: [], itemIDs: []};
         dataOut.listName = listName.rows[0].name;
         listEntries.rows.forEach(entry => {
             dataOut.itemNames = dataOut.itemNames.concat(entry.name);
             dataOut.itemLinks = dataOut.itemLinks.concat(entry.link);
             dataOut.itemImages = dataOut.itemImages.concat(entry.image);
             dataOut.itemQuantities = dataOut.itemQuantities.concat(entry.quantity);
+            dataOut.itemPurchased = dataOut.itemPurchased.concat(entry.purchased);
             dataOut.itemIDs = dataOut.itemIDs.concat(entry.id);
         });
         return dataOut;
     }catch(error){
         console.error('Error executing stored procedure:', error);
     }
-    return {listName: "", itemNames: [], itemLinks: [], itemImages: [], itemQuantities: [], itemIDs: []};
+    return {listName: "", itemNames: [], itemLinks: [], itemImages: [], itemQuantities: [], itemPurchased: [], itemIDs: []};
 }
