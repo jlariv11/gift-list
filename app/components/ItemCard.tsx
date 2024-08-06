@@ -30,8 +30,9 @@ export const ItemCard: React.FC<ItemCardProps> = ({ id, name, itemLink, itemImag
   const [purchased, setPurchased] = useState(itemPurchased);
   const [shared, setShared] = useState(isShared);
   const [imageLinkHidden, setLinkHidden] = useState(true);
+  var lastSaveQtyPurchased = itemQuantityPurchased;
   const handleDataChange = (id: string) => {
-    onDataChange(id, { itemName, link, image, purchased, quantityPurchased, quantity });
+    onDataChange(id, { itemName, link, image, purchased, quantityPurchased: (quantityPurchased - lastSaveQtyPurchased), quantity });
   };
   return (
 
@@ -41,7 +42,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({ id, name, itemLink, itemImag
           {isShared && (
             <div>
               <p className="text-tiny uppercase font-bold text-white">{itemName}</p>
-              {link != "" && <a className="text-blue-700 underline text-default-500" href={link}>Link</a>}
+              {link != "" && <a className="text-blue-700 underline text-default-500" href={link} target="_blank" rel="noopener noreferrer">Link</a>}
             </div>)}
           {!isShared && (
             <div>
@@ -55,17 +56,25 @@ export const ItemCard: React.FC<ItemCardProps> = ({ id, name, itemLink, itemImag
           {shared && (
             <div>
               <div className="flex">
-                <h1 className="pr-2 text-white">Purchased</h1>
+                <h1 className="pr-2 text-white whitespace-nowrap">Mark Purchased</h1>
                 <Input type="checkbox" labelPlacement="outside-left" checked={purchased} onChange={(e) => { setPurchased(e.target.checked); }} onBlur={() => handleDataChange(id)} />
-                <h1 className="pr-2 text-white" hidden={!purchased}>#Purchased</h1>
-                <Input type="number" max={quantity} min={quantityPurchased} value={String(quantityPurchased)} onChange={(e) => setQuantityPurchased(Number(e.target.value))} onBlur={() => { handleDataChange(id)}} hidden={!purchased} />
+            </div>
+            <div className="flex items-center">
+              <h1 className="pr-2 text-white whitespace-nowrap" hidden={!purchased}>Amount to Purchase</h1>
+              <Input type="number" max={quantity - lastSaveQtyPurchased} min={0} value={String(quantityPurchased)} onChange={(e) => setQuantityPurchased(Number(e.target.value))} onBlur={() => { handleDataChange(id)}} hidden={!purchased} />
+            </div>
+            <div className="flex items-center">
+              <h1 className="pr-2 text-white" hidden={!purchased}>Quantity Purchased: {quantityPurchased}</h1>
             </div>
             <p className="text-tiny uppercase font-bold text-white">Quantity: {quantity}</p>
           </div>)}
           {!shared && (
             <div>
               <Input className="pl-2 text-black" type="text" placeholder="Insert Image Link" defaultValue={image == "/add_image.svg" ? "" : image} onChange={(e) => setImage(e.target.value)} onBlur={() => handleDataChange(id)} hidden={imageLinkHidden} />
-              <Input type="number" defaultValue={String(quantity)} onChange={(e) => setQuantity(Number(e.target.value))} onBlur={() => handleDataChange(id)} />
+              <div className="flex">
+                <a className="pr-2 text-white">Quantity</a>
+                <Input type="number" min={1} defaultValue={String(quantity)} onChange={(e) => setQuantity(Number(e.target.value))} onBlur={() => handleDataChange(id)} />
+              </div>
             </div>)}
 
         </CardBody>

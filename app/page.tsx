@@ -34,7 +34,7 @@ export default function Home() {
   const [shareInput, setShareInput] = useState<string>("");
 
   const addNewItem = () => {
-    const newItem: Item = { id: uuidv4(), data: { itemName: "", link: "", image: "/add_image.svg", purchased: false, quantity: 1, quantityPurchased: 0 } };
+    const newItem: Item = { id: uuidv4(), data: { itemName: "", link: "", image: "/add_image.svg", purchased: false, quantity: 1, quantityPurchased: 1 } };
     setItems([...items, newItem]);
   }
   const handleDelete = (id: string) => {
@@ -52,13 +52,13 @@ export default function Home() {
     setItems(updatedItems);
   }
   return (
-    <main>
+    <main>      
       <div className="w-screen h-24 bg-slate-500 flex items-center">
-        <h1 className=" ml-2 text-2xl">MyListMaker</h1>
+        <h1 className=" ml-2 text-2xl">MyListMaker: BEYOND</h1>
       </div>
       <CenteredLayout>
         {shareIdExists(shareid) && <h1 className="p-2 border-2 border-white text-white font-bold uppercase text-center">{listName}</h1>}
-        {ownerIdExists(ownerid) && <Input className="p-2 border-2 border-white text-black" type="text" placeholder="List Name" value={listName} onChange={(e) => setListName(e.target.value)} title={listName} />}
+        {!shareIdExists(shareid) && <Input className="p-2 border-2 border-white text-black" type="text" placeholder="List Name" value={listName} onChange={(e) => setListName(e.target.value)} title={listName} />}
         <div className="border-2 border-white">
           {items.map(item => {
             return <ItemCard key={item.id} id={item.id} name={item.data.itemName} itemLink={item.data.link} itemImage={item.data.image} itemQuantity={item.data.quantity} itemQuantityPurchased={item.data.quantityPurchased} itemPurchased={item.data.purchased} isShared={shareIdExists(shareid)} handleDelete={handleDelete} onDataChange={handleDataChange} />
