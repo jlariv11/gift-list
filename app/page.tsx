@@ -7,8 +7,6 @@ import { startTransition } from "react";
 import { v4 as uuidv4 } from 'uuid';
 import { Input } from "@nextui-org/input";
 import CenteredLayout from "./components/CenteredLayout";
-import { code } from "@nextui-org/react";
-
 
 interface Item {
   id: string;
@@ -32,7 +30,7 @@ export default function Home() {
 
 
   const addNewItem = () => {
-    const newItem: Item = { id: uuidv4(), data: { itemName: "", link: "", image: "/add_image.svg", purchased: false, quantity: 1, quantityPurchased: 1 } };
+    const newItem: Item = { id: uuidv4(), data: { itemName: "", link: "", image: "/add_image.svg", quantity: 1, quantityPurchased: 1 } };
     setItems([...items, newItem]);
   }
   const handleDelete = (id: string) => {
@@ -59,7 +57,7 @@ export default function Home() {
         {isOwner && <Input className="p-2 border-2 border-white text-black" type="text" placeholder="List Name" value={listName} onChange={(e) => setListName(e.target.value)} title={listName} />}
         <div className="border-2 border-white">
           {items.map(item => {
-            return <ItemCard key={item.id} id={item.id} name={item.data.itemName} itemLink={item.data.link} itemImage={item.data.image} itemQuantity={item.data.quantity} itemQuantityPurchased={item.data.quantityPurchased} itemPurchased={item.data.purchased} isShared={!isOwner} handleDelete={handleDelete} onDataChange={handleDataChange} />
+            return <ItemCard key={item.id} id={item.id} name={item.data.itemName} itemLink={item.data.link} itemImage={item.data.image} itemQuantity={item.data.quantity} itemQuantityPurchased={item.data.quantityPurchased} isShared={!isOwner} handleDelete={handleDelete} onDataChange={handleDataChange} />
           })}
           <Image className="border-2 border-white hover:bg-red-700 mt-2 ml-2 hover:cursor-pointer" onClick={addNewItem} width={30} height={30} src={"/add_list_item.svg"} alt="Add Item" hidden={!isOwner}/>
         </div>
@@ -123,10 +121,10 @@ export default function Home() {
                 setListName(data.listName);
                 const newItems = [];
                 for (var i = 0; i < data.itemIDs.length; i++) {
-                  if(!isOwner && data.itemQuantities[i] == data.itemQuantitiesPurchased[i]){
+                  if(data.isShareCode && data.itemQuantities[i] == data.itemQuantitiesPurchased[i]){
                     continue;
                   }
-                  const newItem: Item = { id: data.itemIDs[i], data: { itemName: data.itemNames[i], link: data.itemLinks[i], image: data.itemImages[i], purchased: data.itemPurchased[i], quantity: data.itemQuantities[i], quantityPurchased: data.itemQuantitiesPurchased[i] } };
+                  const newItem: Item = { id: data.itemIDs[i], data: { itemName: data.itemNames[i], link: data.itemLinks[i], image: data.itemImages[i], quantity: data.itemQuantities[i], quantityPurchased: data.itemQuantitiesPurchased[i] } };
                   newItems.push(newItem);
                 }
                 setItems(newItems);

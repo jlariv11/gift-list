@@ -11,7 +11,6 @@ interface ItemCardProps {
   itemImage: string;
   itemQuantity: number;
   itemQuantityPurchased: number;
-  itemPurchased: boolean;
   isShared: boolean;
   handleDelete: (id: string) => void;
   onDataChange: (id: string, data: ItemData) => void;
@@ -21,18 +20,17 @@ const imageLoader = ({ src }: ImageLoaderProps) => {
   return src;
 };
 
-export const ItemCard: React.FC<ItemCardProps> = ({ id, name, itemLink, itemImage, itemQuantity, itemQuantityPurchased, itemPurchased, isShared, handleDelete, onDataChange }) => {
+export const ItemCard: React.FC<ItemCardProps> = ({ id, name, itemLink, itemImage, itemQuantity, itemQuantityPurchased, isShared, handleDelete, onDataChange }) => {
   const [itemName, setItemName] = useState(name);
   const [link, setLink] = useState(itemLink);
   const [image, setImage] = useState(itemImage);
   const [quantity, setQuantity] = useState(itemQuantity);
   const [quantityPurchased, setQuantityPurchased] = useState(itemQuantityPurchased);
-  const [purchased, setPurchased] = useState(itemPurchased);
   const [shared, setShared] = useState(isShared);
   const [imageLinkHidden, setLinkHidden] = useState(true);
   var lastSaveQtyPurchased = itemQuantityPurchased;
   const handleDataChange = (id: string) => {
-    onDataChange(id, { itemName, link, image, purchased, quantityPurchased: (quantityPurchased - lastSaveQtyPurchased), quantity });
+    onDataChange(id, { itemName, link, image, quantityPurchased: (quantityPurchased - lastSaveQtyPurchased), quantity });
   };
   return (
 
@@ -55,16 +53,12 @@ export const ItemCard: React.FC<ItemCardProps> = ({ id, name, itemLink, itemImag
           <Image className="pb-2" width={270} height={270} src={image} loader={imageLoader} alt="List Image" onClick={() => setLinkHidden(!imageLinkHidden)} />
           {shared && (
             <div>
-              <div className="flex">
-                <h1 className="pr-2 text-white whitespace-nowrap">Mark Purchased</h1>
-                <Input type="checkbox" labelPlacement="outside-left" checked={purchased} onChange={(e) => { setPurchased(e.target.checked); }} onBlur={() => handleDataChange(id)} />
+            <div className="flex items-center">
+              <h1 className="pr-2 text-white whitespace-nowrap">Amount to Purchase</h1>
+              <Input type="number" max={quantity - lastSaveQtyPurchased} min={0} value={String(quantityPurchased)} onChange={(e) => setQuantityPurchased(Number(e.target.value))} onBlur={() => { handleDataChange(id)}} />
             </div>
             <div className="flex items-center">
-              <h1 className="pr-2 text-white whitespace-nowrap" hidden={!purchased}>Amount to Purchase</h1>
-              <Input type="number" max={quantity - lastSaveQtyPurchased} min={0} value={String(quantityPurchased)} onChange={(e) => setQuantityPurchased(Number(e.target.value))} onBlur={() => { handleDataChange(id)}} hidden={!purchased} />
-            </div>
-            <div className="flex items-center">
-              <h1 className="pr-2 text-white" hidden={!purchased}>Quantity Purchased: {quantityPurchased}</h1>
+              <h1 className="pr-2 text-white">Quantity Purchased: {quantityPurchased}</h1>
             </div>
             <p className="text-tiny uppercase font-bold text-white">Quantity: {quantity}</p>
           </div>)}

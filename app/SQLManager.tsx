@@ -5,7 +5,6 @@ export interface ItemData {
     itemName: string,
     link: string,
     image: string,
-    purchased: boolean,
     quantityPurchased: number,
     quantity: number
 }
@@ -67,9 +66,9 @@ export async function saveList(code: string, listName: string, ids: string[], to
         ids.map(async id => {
             var itemData = items[ids.indexOf(id)];
             if (isShareCode) {
-                await sql`UPDATE ENTRY SET purchased=${itemData.purchased}, quantityPurchased=${itemData.quantityPurchased} WHERE ownerid=(SELECT ownerid FROM LIST WHERE shareid=${code}) AND id=${id}`;
+                await sql`UPDATE ENTRY SET quantityPurchased=${itemData.quantityPurchased} WHERE ownerid=(SELECT ownerid FROM LIST WHERE shareid=${code}) AND id=${id}`;
             } else {
-                await sql`INSERT INTO ENTRY VALUES(${code}, ${itemData.itemName}, ${itemData.link}, ${itemData.image}, ${itemData.quantity}, ${id}, ${itemData.purchased}, ${itemData.quantityPurchased})`;
+                await sql`INSERT INTO ENTRY VALUES(${code}, ${itemData.itemName}, ${itemData.link}, ${itemData.image}, ${itemData.quantity}, ${id}, ${itemData.quantityPurchased})`;
             }
         });
     } catch (error) {
@@ -84,7 +83,6 @@ export interface ListData {
     itemLinks: string[],
     itemImages: string[],
     itemQuantities: number[],
-    itemPurchased: boolean[],
     itemIDs: string[],
     itemQuantitiesPurchased: number[]
 }
@@ -97,7 +95,6 @@ const getEmptyListData = (): ListData => {
         itemLinks: [],
         itemImages: [],
         itemQuantities: [],
-        itemPurchased: [],
         itemIDs: [],
         itemQuantitiesPurchased: []
     };
@@ -106,7 +103,7 @@ const getEmptyListData = (): ListData => {
 export async function loadList(code: string): Promise<ListData> {
     try {
         const listName = await sql`SELECT name FROM LIST WHERE ownerid=${code} OR shareid=${code}`;
-        const listEntries = await sql`SELECT name, link, image, quantity, purchased, id, quantitypurchased FROM ENTRY WHERE ownerid=${code} OR ownerid=(SELECT ownerid FROM LIST WHERE shareid=${code})`;
+        const listEntries = await sql`SELECT name, link, image, quantity, id, quantitypurchased FROM ENTRY WHERE ownerid=${code} OR ownerid=(SELECT ownerid FROM LIST WHERE shareid=${code})`;
         const shareCodeCheck = await sql`SELECT 1 from LIST WHERE shareid=${code}`;
         var isShareCode = shareCodeCheck.rows.length > 0;
         var dataOut = getEmptyListData();
@@ -117,7 +114,6 @@ export async function loadList(code: string): Promise<ListData> {
             dataOut.itemLinks = dataOut.itemLinks.concat(entry.link);
             dataOut.itemImages = dataOut.itemImages.concat(entry.image);
             dataOut.itemQuantities = dataOut.itemQuantities.concat(entry.quantity);
-            dataOut.itemPurchased = dataOut.itemPurchased.concat(entry.purchased);
             dataOut.itemIDs = dataOut.itemIDs.concat(entry.id);
             dataOut.itemQuantitiesPurchased = dataOut.itemQuantitiesPurchased.concat(entry.quantitypurchased);
         });
