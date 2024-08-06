@@ -40,6 +40,20 @@ export async function generateShareCode(ownerid: string): Promise<string> {
     }
 }
 
+export async function getShareCode(ownerid: string): Promise<string> {
+    try {
+        const x = await sql`SELECT shareid FROM LIST WHERE ownerid=${ownerid}`;
+        if (x.rows[0].shareid == null || x.rows[0].shareid == undefined) {
+            return "";
+        } else {
+            return String(x.rows[0].shareid);
+        }
+    } catch (error) {
+        console.error('Error executing stored procedure:', error);
+        return "";
+    }
+}
+
 export async function saveList(code: string, listName: string, ids: string[], toDelete: string[], items: ItemData[]): Promise<void> {
     try {
         const shareCodeCheck = await sql`SELECT 1 from LIST WHERE shareid=${code}`;
@@ -64,6 +78,7 @@ export async function saveList(code: string, listName: string, ids: string[], to
 }
 
 export interface ListData {
+    isShareCode: boolean,
     listName: string,
     itemNames: string[],
     itemLinks: string[],
@@ -76,6 +91,7 @@ export interface ListData {
 
 const getEmptyListData = (): ListData => {
     return {
+        isShareCode: true,
         listName: "",
         itemNames: [],
         itemLinks: [],
@@ -91,7 +107,10 @@ export async function loadList(code: string): Promise<ListData> {
     try {
         const listName = await sql`SELECT name FROM LIST WHERE ownerid=${code} OR shareid=${code}`;
         const listEntries = await sql`SELECT name, link, image, quantity, purchased, id, quantitypurchased FROM ENTRY WHERE ownerid=${code} OR ownerid=(SELECT ownerid FROM LIST WHERE shareid=${code})`;
+        const shareCodeCheck = await sql`SELECT 1 from LIST WHERE shareid=${code}`;
+        var isShareCode = shareCodeCheck.rows.length > 0;
         var dataOut = getEmptyListData();
+        dataOut.isShareCode = isShareCode;
         dataOut.listName = listName.rows[0].name;
         listEntries.rows.forEach(entry => {
             dataOut.itemNames = dataOut.itemNames.concat(entry.name);

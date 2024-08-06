@@ -2,11 +2,12 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import { ItemCard } from "./components/ItemCard";
-import { createList, saveList, loadList, ItemData, generateShareCode } from './SQLManager';
+import { createList, saveList, loadList, ItemData, generateShareCode, getShareCode } from './SQLManager';
 import { startTransition } from "react";
 import { v4 as uuidv4 } from 'uuid';
 import { Input } from "@nextui-org/input";
 import CenteredLayout from "./components/CenteredLayout";
+import { code } from "@nextui-org/react";
 
 
 interface Item {
@@ -14,24 +15,21 @@ interface Item {
   data: ItemData
 }
 
-function ownerIdExists(ownerid: string | null | undefined) {
-  return (ownerid ?? "") !== "";
-}
-function shareIdExists(shareid: string | null | undefined) {
-  return (shareid ?? "") !== "";
+function listIdExists(listid: string | null | undefined) {
+  return (listid ?? "") !== "";
 }
 
 export default function Home() {
 
   const [items, setItems] = useState<Item[]>([]);
   const [toDelete, setToDelete] = useState<string[]>([]);
-  const [ownerid, setOwnerID] = useState<string>();
-  const [shareid, setShareID] = useState<string>();
+  const [listid, setListID] = useState<string>();
   const [isOwner, setListOwner] = useState<boolean>(true);
   const [listName, setListName] = useState<string>("");
-  const [isSharedLastEdit, setSharedLastEdit] = useState<boolean>(true);
-  const [ownerInput, setOwnerInput] = useState<string>("");
-  const [shareInput, setShareInput] = useState<string>("");
+  const [codeInput, setCodeInput] = useState<string>("");
+  // This should only be used to display the share ID. It should not be used in querying or any code logic
+  const [shareIDTextOnly, setShareID] = useState<string>("");
+
 
   const addNewItem = () => {
     const newItem: Item = { id: uuidv4(), data: { itemName: "", link: "", image: "/add_image.svg", purchased: false, quantity: 1, quantityPurchased: 1 } };
@@ -57,20 +55,20 @@ export default function Home() {
         <h1 className=" ml-2 text-2xl">MyListMaker: BEYOND</h1>
       </div>
       <CenteredLayout>
-        {shareIdExists(shareid) && <h1 className="p-2 border-2 border-white text-white font-bold uppercase text-center">{listName}</h1>}
-        {!shareIdExists(shareid) && <Input className="p-2 border-2 border-white text-black" type="text" placeholder="List Name" value={listName} onChange={(e) => setListName(e.target.value)} title={listName} />}
+        {!isOwner && <h1 className="p-2 border-2 border-white text-white font-bold uppercase text-center">{listName}</h1>}
+        {isOwner && <Input className="p-2 border-2 border-white text-black" type="text" placeholder="List Name" value={listName} onChange={(e) => setListName(e.target.value)} title={listName} />}
         <div className="border-2 border-white">
           {items.map(item => {
-            return <ItemCard key={item.id} id={item.id} name={item.data.itemName} itemLink={item.data.link} itemImage={item.data.image} itemQuantity={item.data.quantity} itemQuantityPurchased={item.data.quantityPurchased} itemPurchased={item.data.purchased} isShared={shareIdExists(shareid)} handleDelete={handleDelete} onDataChange={handleDataChange} />
+            return <ItemCard key={item.id} id={item.id} name={item.data.itemName} itemLink={item.data.link} itemImage={item.data.image} itemQuantity={item.data.quantity} itemQuantityPurchased={item.data.quantityPurchased} itemPurchased={item.data.purchased} isShared={!isOwner} handleDelete={handleDelete} onDataChange={handleDataChange} />
           })}
-          <Image className="border-2 border-white hover:bg-red-700 mt-2 ml-2 hover:cursor-pointer" onClick={addNewItem} width={30} height={30} src={"/add_list_item.svg"} alt="Add Item" hidden={shareIdExists(shareid)}/>
+          <Image className="border-2 border-white hover:bg-red-700 mt-2 ml-2 hover:cursor-pointer" onClick={addNewItem} width={30} height={30} src={"/add_list_item.svg"} alt="Add Item" hidden={!isOwner}/>
         </div>
         <div className="flex justify-between mt-2">
           <div className="text-white border-2 border-white hover:bg-red-700 hover:cursor-pointer" onClick={(e) => {
-            if (ownerid !== undefined) {
+            if (isOwner && listid !== undefined) {
               startTransition(async () => {
-                const test = await generateShareCode(ownerid);
-                setShareID(test);
+                const id = await generateShareCode(listid);
+                setShareID(id);
               })
             }
           }}>
@@ -78,25 +76,26 @@ export default function Home() {
           </div>
           <div className="text-white border-2 border-white hover:bg-red-700 hover:cursor-pointer" onClick={(e) =>
             startTransition(async () => {
-
               if (isOwner) {
-                if (ownerIdExists(ownerid)) {
+                // If the list owner is logged in, save the list - else this is a new list so create a list in the database
+                if (listIdExists(listid)) {
                   const listOfData = items.map(item => item.data);
                   const ids = items.map(item => item.id);
-                  saveList(ownerid as string, listName, ids, toDelete, listOfData);
+                  saveList(listid as string, listName, ids, toDelete, listOfData);
                   setToDelete([]);
                 } else {
                   const listOfData = items.map(item => item.data);
                   const ids = items.map(item => item.id);
-                  setOwnerID(await createList(ids, toDelete, listOfData, listName));
+                  setListID(await createList(ids, toDelete, listOfData, listName));
                   setToDelete([]);
                 }
               } else {
-                if (shareIdExists(shareid)) {
+                // If the user is not the list's owner, but there is an ID(it is the share code) save the shared list data
+                if (listIdExists(listid)) {
                   const listOfData = items.map(item => item.data);
                   const ids = items.map(item => item.id);
                   listOfData.map(item => console.log(item.quantityPurchased));
-                  saveList(shareid as string, listName, ids, toDelete, listOfData);
+                  saveList(listid as string, listName, ids, toDelete, listOfData);
                 }
               }
             })
@@ -105,42 +104,33 @@ export default function Home() {
           </div>
         </div>
         <div className="text-white">
-          <div>Owner ID: {ownerid}</div>
-          <div>Share ID: {shareid}</div>
+          <div>Owner ID: {isOwner ? listid : ""}</div>
+          <div>Share ID: {isOwner ? shareIDTextOnly : listid}</div>
         </div>
         <div className="border-white text-white border-2 mt-4">
-          <h1 className="pl-2 pt-2">Insert OwnerID: </h1>
-          <Input className="p-2 text-black" type="text" placeholder="OwnerID" value={ownerInput} onChange={(e) => { setOwnerInput(e.target.value); setSharedLastEdit(false) }} />
-          <h1 className="pl-2">Insert ShareID: </h1>
-          <Input className="p-2 text-black" type="text" placeholder="ShareID" value={shareInput} onChange={(e) => { setShareInput(e.target.value); setSharedLastEdit(true) }} />
+          <h1 className="pl-2 pt-2">Insert Owner/Share ID: </h1>
+          <Input className="p-2 text-black" type="text" placeholder="Owner/Share ID" value={codeInput} onChange={(e) => { setCodeInput(e.target.value); }} />
           <div className="text-white border-2 border-white hover:bg-red-700 hover:cursor-pointer text-center"
             onClick={() => {
               startTransition(async () => {
-                const data = await loadList(isSharedLastEdit ? shareInput : ownerInput);
+                const data = await loadList(codeInput);
+                setListOwner(!data.isShareCode);
                 setListName(data.listName);
                 const newItems = [];
                 for (var i = 0; i < data.itemIDs.length; i++) {
-                  if(isSharedLastEdit && data.itemQuantities[i] == data.itemQuantitiesPurchased[i]){
+                  if(!isOwner && data.itemQuantities[i] == data.itemQuantitiesPurchased[i]){
                     continue;
                   }
                   const newItem: Item = { id: data.itemIDs[i], data: { itemName: data.itemNames[i], link: data.itemLinks[i], image: data.itemImages[i], purchased: data.itemPurchased[i], quantity: data.itemQuantities[i], quantityPurchased: data.itemQuantitiesPurchased[i] } };
                   newItems.push(newItem);
                 }
                 setItems(newItems);
+                if(isOwner){
+                  setShareID(await getShareCode(String(codeInput)));
+                }
               });
-              if (isSharedLastEdit) {
-                setShareID(shareInput);
-                setOwnerInput("");
-                setShareInput("");
-                setOwnerID("");
-                setListOwner(false);
-              } else {
-                setOwnerID(ownerInput);
-                setOwnerInput("");
-                setShareInput("");
-                setShareID("");
-                setListOwner(true);
-              }
+              setListID(codeInput);
+              setCodeInput("");
             }}>
             Load List
           </div>
