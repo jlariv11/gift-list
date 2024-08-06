@@ -43,7 +43,7 @@ export async function generateShareCode(ownerid: string): Promise<string> {
 export async function getShareCode(ownerid: string): Promise<string> {
     try {
         const x = await sql`SELECT shareid FROM LIST WHERE ownerid=${ownerid}`;
-        if (x.rows[0].shareid == null || x.rows[0].shareid == undefined) {
+        if (x.rows.length == 0) {
             return "";
         } else {
             return String(x.rows[0].shareid);

@@ -94,7 +94,6 @@ export default function Home() {
                 if (listIdExists(listid)) {
                   const listOfData = items.map(item => item.data);
                   const ids = items.map(item => item.id);
-                  listOfData.map(item => console.log(item.quantityPurchased));
                   saveList(listid as string, listName, ids, toDelete, listOfData);
                 }
               }
@@ -112,9 +111,15 @@ export default function Home() {
           <Input className="p-2 text-black" type="text" placeholder="Owner/Share ID" value={codeInput} onChange={(e) => { setCodeInput(e.target.value); }} />
           <div className="text-white border-2 border-white hover:bg-red-700 hover:cursor-pointer text-center"
             onClick={() => {
+              if((codeInput ?? "") == ""){
+                return;
+              }
+              setItems([]);
               startTransition(async () => {
                 const data = await loadList(codeInput);
                 setListOwner(!data.isShareCode);
+                setListID(codeInput);
+                setShareID(await getShareCode(codeInput));
                 setListName(data.listName);
                 const newItems = [];
                 for (var i = 0; i < data.itemIDs.length; i++) {
@@ -125,11 +130,7 @@ export default function Home() {
                   newItems.push(newItem);
                 }
                 setItems(newItems);
-                if(isOwner){
-                  setShareID(await getShareCode(String(codeInput)));
-                }
               });
-              setListID(codeInput);
               setCodeInput("");
             }}>
             Load List
