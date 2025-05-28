@@ -1,0 +1,27 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("POSTGRES_PRISMA_URL")
+}
+
+model Item {
+  itemID                Int     @id @default(autoincrement())
+  ownerID               String
+  itemName              String
+  itemQuantity          Int     @default(1)
+  itemLink              String?
+  itemImage             String?
+  itemDescription       String?
+  itemQuantityPurchased Int     @default(0)
+  List                  List    @relation(fields: [ownerID], references: [ownerID])
+}
+
+model List {
+  ownerID  String  @id
+  shareID  String? @unique
+  listName String  @default("List")
+  Item     Item[]
+}
