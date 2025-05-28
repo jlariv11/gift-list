@@ -4,25 +4,25 @@ import {Item, saveSharedList} from "../database/SaveList";
 import ListButton from "../elements/ListButton";
 import {loadViewList} from "../database/LoadList";
 import ItemElement from "../elements/ItemElement";
+import {useSearchParams} from "next/navigation";
 
 export default function ShareList() {
     const [listName, setListName] = useState('');
     const [items, setItems] = useState<Item[]>([]);
     const [shareID, setShareID] = useState("");
-    // const location = useLocation();
-    // const data = location.state as {shareID: string}
-    const data = {shareID: ""}
+    const searchParams = useSearchParams();
 
-    async function fetchList() {
-        const listData = await loadViewList(data.shareID);
+    async function fetchList(shareID: string) {
+        const listData = await loadViewList(shareID);
         setListName(listData.listName);
         setItems(listData.items);
         setShareID(listData.shareID);
     }
 
     useEffect(() => {
-        if(data) {
-            fetchList();
+        const shareID = searchParams?.get("shareID");
+        if(shareID) {
+            fetchList(shareID);
         }
     }, [])
 
