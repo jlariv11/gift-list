@@ -38,13 +38,13 @@ export default function CreateList() {
         }
 
         const baseUrl = window.location.origin;
-        const param = edit ? `ownerID=${ownerID}` : `shareID=${shareID}`;
+        const param = edit ? `owner=${ownerID}` : `share=${shareID}`;
         return `${baseUrl}?${param}`;
     }
 
 
     useEffect(() => {
-        const ownerID = searchParams?.get("ownerID");
+        const ownerID = searchParams?.get("owner");
         if(ownerID) {
             loadEditList(ownerID).then((listData) => {
                 setListName(listData.listName);
@@ -152,5 +152,6 @@ export default function CreateList() {
                 <CreateItem setShowAddItem={setShowEditItem} addItem={editItem} itemProps={editData} />
             )}
         </div>
+
     )
 }

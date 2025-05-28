@@ -20,7 +20,7 @@ export default function ShareList() {
     }
 
     useEffect(() => {
-        const shareID = searchParams?.get("shareID");
+        const shareID = searchParams?.get("share");
         if(shareID) {
             fetchList(shareID);
         }

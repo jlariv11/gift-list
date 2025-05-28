@@ -3,6 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Link from "next/link";
 import {FaRegUserCircle} from "react-icons/fa";
+import {Suspense} from "react";
+import Loading from "@/app/loading";
 
 
 interface NavBarProps {
@@ -57,12 +59,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+    <Suspense fallback={<Loading />}>
+        <body
+            className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        >
         <NavBar />
         {children}
-      </body>
+        </body>
+    </Suspense>
     </html>
   );
 }

@@ -10,10 +10,10 @@ export default function Home() {
 
   useEffect(() => {
     if(searchParams){
-      if(searchParams.has("ownerID")){
-        router.push(`/CreateList?ownerID=${searchParams.get("ownerID")}`);
-      }else if(searchParams.has("shareID")){
-        router.push(`/ShareList?shareID=${searchParams.get("shareID")}`);
+      if(searchParams.has("owner")){
+        router.push(`/CreateList?owner=${searchParams.get("owner")}`);
+      }else if(searchParams.has("share")){
+        router.push(`/ShareList?share=${searchParams.get("share")}`);
       }
     }
   }, [searchParams])
