@@ -57,7 +57,7 @@ export default function CreateList() {
         }
     }, []);
 
-    async function itemsChanged(){
+    async function listChanged(){
         const listData = {
             listName: listName,
             ownerID: ownerID,
@@ -73,7 +73,7 @@ export default function CreateList() {
 
     useEffect(() => {
         if(items.length > 0) {
-            itemsChanged();
+            listChanged();
         }
     }, [items]);
 
@@ -103,7 +103,7 @@ export default function CreateList() {
             item.itemLink = itemData.itemLink;
             item.itemDescription = itemData.itemDescription;
             setEditData(undefined);
-            itemsChanged();
+            listChanged();
             toggleChangesSaved();
         }
     }
@@ -125,33 +125,35 @@ export default function CreateList() {
     }
 
     return (
-        <div className={'m-2 flex flex-col items-center'}>
-            <div className={"w-full max-w-4xl space-y-1.5"}>
-                <h1 className={"text-4xl"}>{newList ? "Edit" : "Create New"} List</h1>
-                {changesSaved && <h2 className={"text-blue-600 text-xl"}>Changes Saved!</h2>}
-                <div className={"pb-4 border-4 rounded-md border-gray-400 p-4 bg-gray-300"}>
-                    <ListInput label={'List Name: '} type={'text'} value={listName} onChange={(e) => setListName(e.target.value)} />
-                </div>
-                <div className={"h-108 overflow-y-auto border-4 rounded-md border-gray-400 p-4 bg-gray-300"}>
-                    {items.map((item, index) => <ItemElement key={index} itemID={item.itemID} itemName={item.itemName} itemQuantity={item.itemQuantity} itemQuantityPurchased={item.itemQuantityPurchased} itemLink={item.itemLink} itemImage={item.itemImage} itemDescription={item.itemDescription} editItem={fetchEditItem} deleteItem={deleteItem} />)}
-                </div>
-                <div className={"bg-gray-300 border-gray-400 border-4 rounded-md shadow-sm p-4"}>
-                    <h2><strong>Edit Link:</strong> <a onClick={() => addToClipboard(linkFromID(true))} className={"cursor-pointer text-gray-800 hover:text-orange-400"}>{linkFromID(true)}</a></h2>
-                    <div>
-                        <h2><strong>Share Link:</strong> <a onClick={() => addToClipboard(linkFromID(false))} className={"cursor-pointer text-gray-800 hover:text-orange-400"}>{linkFromID(false)}</a> <span hidden={!!shareID}> <ListButton onClick={() => handleGetShareID()} buttonText={"Create Sharable Link"} /></span> </h2>
+        <div>
+            <div className={`m-2 flex flex-col items-center transition-all duration-100 ${showAddItem || showEditItem ? "blur-xs" : ""}`}>
+                <div className={"w-full max-w-4xl space-y-1.5"}>
+                    <h1 className={"text-4xl"}>{newList ? "Edit" : "Create New"} List</h1>
+                    {changesSaved && <h2 className={"text-blue-600 text-xl"}>Changes Saved!</h2>}
+                    <div className={"pb-4 border-4 rounded-md border-gray-400 p-4 bg-gray-300"}>
+                        <ListInput label={'List Name: '} type={'text'} value={listName} onChange={(e) => setListName(e.target.value)} onFinishEdit={() => listChanged()}/>
+                    </div>
+                    <div className={"h-108 overflow-y-auto border-4 rounded-md border-gray-400 p-4 bg-gray-300"}>
+                        {items.map((item, index) => <ItemElement key={index} itemID={item.itemID} itemName={item.itemName} itemQuantity={item.itemQuantity} itemQuantityPurchased={item.itemQuantityPurchased} itemLink={item.itemLink} itemImage={item.itemImage} itemDescription={item.itemDescription} editItem={fetchEditItem} deleteItem={deleteItem} />)}
+                    </div>
+                    <div className={"bg-gray-300 border-gray-400 border-4 rounded-md shadow-sm p-4"}>
+                        <h2><strong>Edit Link:</strong> <a onClick={() => addToClipboard(linkFromID(true))} className={"cursor-pointer text-gray-800 hover:text-orange-400"}>{linkFromID(true)}</a></h2>
+                        <div>
+                            <h2><strong>Share Link:</strong> <a onClick={() => addToClipboard(linkFromID(false))} className={"cursor-pointer text-gray-800 hover:text-orange-400"}>{linkFromID(false)}</a> <span hidden={!!shareID}> <ListButton onClick={() => handleGetShareID()} buttonText={"Create Sharable Link"} /></span> </h2>
+                        </div>
+                    </div>
+                    <div className={"pt-2"}>
+                        <ListButton onClick={() => setShowAddItem(!showAddItem)} buttonText={'Add Item'}/>
                     </div>
                 </div>
-                <div className={"pt-2"}>
-                    <ListButton onClick={() => setShowAddItem(!showAddItem)} buttonText={'Add Item'}/>
-                </div>
             </div>
+            <div id={"addEditModal"}></div>
             {showAddItem && (
-                <CreateItem setShowAddItem={setShowAddItem} addItem={addItem} />
+                <CreateItem setShowAddItem={setShowAddItem} addItem={addItem} modalDivID={"addEditModal"} />
             )}
             {showEditItem && (
-                <CreateItem setShowAddItem={setShowEditItem} addItem={editItem} itemProps={editData} />
+                <CreateItem setShowAddItem={setShowEditItem} addItem={editItem} itemProps={editData} modalDivID={"addEditModal"} />
             )}
         </div>
-
     )
 }

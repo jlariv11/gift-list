@@ -3,13 +3,14 @@ type ListInputProps = {
     type: string;
     id?: string;
     onChange: (e: React.ChangeEvent<HTMLInputElement> | React.ChangeEvent<HTMLTextAreaElement>) => void;
+    onFinishEdit?: (e: React.FocusEvent<HTMLInputElement>) => void;
     value?: string | number;
     min?: number;
     max?: number;
     cols?: number;
     rows?: number;
 }
-function ListInput({label, type, id, onChange, value, min, max, cols, rows}: ListInputProps) {
+function ListInput({label, type, id, onChange, onFinishEdit, value, min, max, cols, rows}: ListInputProps) {
     return (
         <div>
             <div>
@@ -32,6 +33,7 @@ function ListInput({label, type, id, onChange, value, min, max, cols, rows}: Lis
                     max={type === 'number' ? max : undefined}
                     value={value}
                     onChange={(e) => onChange(e)}
+                    onBlur={(e) => onFinishEdit?.(e)}
                 />
             )}
 
