@@ -6,6 +6,7 @@ import ListButton from "../elements/ListButton";
 import ListInput from "../elements/ListInput";
 import {getShareID, loadEditList} from "../database/LoadList";
 import CreateItem from "../components/CreateItem";
+import {useSearchParams} from "next/navigation";
 
 export interface ListProps {
     listName: string;
@@ -26,9 +27,7 @@ export default function CreateList() {
 
     const [changesSaved, setChangesSaved] = useState(false);
 
-    // const location = useLocation();
-    // const data = location.state as {editID: string}
-    const data = {editID: "gcT2glY5DkOkNi1zf1khT"}
+    const searchParams = useSearchParams();
 
     function linkFromID(edit: boolean): string {
         if (edit && !ownerID) {
@@ -45,8 +44,9 @@ export default function CreateList() {
 
 
     useEffect(() => {
-        if(data) {
-            loadEditList(data.editID).then((listData) => {
+        const ownerID = searchParams?.get("ownerID");
+        if(ownerID) {
+            loadEditList(ownerID).then((listData) => {
                 setListName(listData.listName);
                 setItems(listData.items);
                 setOwnerID(listData.ownerID);
@@ -127,7 +127,7 @@ export default function CreateList() {
     return (
         <div className={'m-2 flex flex-col items-center'}>
             <div className={"w-full max-w-4xl space-y-1.5"}>
-                <h1 className={"text-4xl"}>{data ? "Edit" : "Create New"} List</h1>
+                <h1 className={"text-4xl"}>{newList ? "Edit" : "Create New"} List</h1>
                 {changesSaved && <h2 className={"text-blue-600 text-xl"}>Changes Saved!</h2>}
                 <div className={"pb-4 border-4 rounded-md border-gray-400 p-4 bg-gray-300"}>
                     <ListInput label={'List Name: '} type={'text'} value={listName} onChange={(e) => setListName(e.target.value)} />
