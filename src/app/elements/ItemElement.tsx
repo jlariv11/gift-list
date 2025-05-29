@@ -3,7 +3,6 @@ import {FaPencil, FaTrashCan} from "react-icons/fa6";
 import ListButton from "./ListButton";
 import ListInput from "./ListInput";
 import {useState} from "react";
-import Image from "next/image";
 
 export interface ItemElementProps {
     item: Item;

@@ -39,7 +39,7 @@ export default function ShareList() {
             <div className={"w-full max-w-4xl space-y-1.5"}>
                 <h1 className={"text-4xl"}>View {listName}</h1>
                 <div className={"h-108 overflow-y-auto border-4 rounded-md border-gray-400 p-4 bg-gray-300"}>
-                    {items.filter(i => i.itemQuantity !== i.itemQuantityPurchased).map((item, index) => <ItemElement key={index} itemID={item.itemID} itemName={item.itemName} itemQuantity={item.itemQuantity} itemQuantityPurchased={item.itemQuantityPurchased} itemLink={item.itemLink} itemImageURL={item.itemImageURL} itemDescription={item.itemDescription} updatePurchaseCount={updatePurchaseCount}/>)}
+                    {items.filter(i => i.itemQuantity !== i.itemQuantityPurchased).map((item, index) => <ItemElement key={index} item={item} updatePurchaseCount={updatePurchaseCount}/>)}
                 </div>
                 <div>
                     <ListButton onClick={() => saveSharedList({listName: listName, ownerID: "", shareID: shareID, items})} buttonText={'Save Purchases'}/>

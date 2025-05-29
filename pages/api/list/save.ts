@@ -1,7 +1,6 @@
 import {VercelRequest, VercelResponse} from '@vercel/node'
 import prismaClient from "../../../lib/prisma"
 import {nanoid} from "nanoid";
-import {put} from "@vercel/blob";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
     const data = req.body;
