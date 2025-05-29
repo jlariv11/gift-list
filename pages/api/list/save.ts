@@ -28,7 +28,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                             itemQuantity: item.itemQuantity,
                             itemQuantityPurchased: item.itemQuantityPurchased,
                             itemLink: item.itemLink,
-                            itemImage: item.itemImage,
+                            itemImageURL: item.itemImageURL,
                             itemDescription: item.itemDescription,
                         },
                     });
@@ -41,7 +41,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                             itemQuantity: item.itemQuantity,
                             itemQuantityPurchased: item.itemQuantityPurchased,
                             itemLink: item.itemLink,
-                            itemImage: item.itemImage,
+                            itemImageURL: item.itemImageURL,
                             itemDescription: item.itemDescription,
                         },
                     });

@@ -11,7 +11,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 }
             })
         }
-        res.status(200);
+        res.status(200).json({});
     }catch (err){
         console.error(err);
         res.status(500).json("Failed to delete items")

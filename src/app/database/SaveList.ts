@@ -8,7 +8,8 @@ export interface Item {
     itemQuantity: number;
     itemQuantityPurchased: number | undefined;
     itemLink: string;
-    itemImage: string;
+    itemImageURL: string;
+    itemImageFile: FormData | undefined;
     itemDescription: string;
 }
 
@@ -17,6 +18,21 @@ export async function saveList(listProps: ListProps) {
     for(let i = 0; i < data.itemIDs.length; i++){
         listProps.items[i].itemID = data.itemIDs[i];
     }
+
+    for (const item of listProps.items) {
+        if(item.itemImageFile && item.itemImageFile.has("file") && item.itemID){
+            const formData = item.itemImageFile;
+            formData.set("itemID", item.itemID.toString());
+            formData.set("ownerID", listProps.ownerID);
+            formData.set("name", item.itemName);
+            await axios.post(ROUTES.SAVE_IMAGES, formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+        }
+    }
+
     return data.ownerID;
 }
 

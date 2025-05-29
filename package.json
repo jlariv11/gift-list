@@ -10,8 +10,10 @@
   },
   "dependencies": {
     "@prisma/client": "^6.8.2",
+    "@vercel/blob": "^1.1.1",
     "@vercel/node": "^5.2.0",
     "axios": "^1.9.0",
+    "formidable": "^3.5.4",
     "nanoid": "^5.1.5",
     "next": "15.3.2",
     "react": "^19.0.0",
@@ -21,6 +23,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
+    "@types/formidable": "^3.4.5",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
