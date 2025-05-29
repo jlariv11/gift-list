@@ -43,3 +43,7 @@ export async function saveSharedList(listProps: ListProps) {
 export async function deleteItems(itemIDs: number[]) {
     await axios.delete(ROUTES.DELETE_ITEMS, {data: {itemIDs}});
 }
+
+export async function deleteList(ownerID: string) {
+    await axios.delete(ROUTES.DELETE_LIST, {data: {ownerID}})
+}

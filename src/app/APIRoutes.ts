@@ -4,4 +4,5 @@ export const ROUTES = {
     SAVE_LIST: "/api/list/save",
     DELETE_ITEMS: "/api/item/deleteitems",
     SAVE_IMAGES: "/api/list/saveimages",
+    DELETE_LIST: "/api/list/deletelist",
 }

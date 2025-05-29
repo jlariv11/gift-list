@@ -1,6 +1,6 @@
 "use client"
 import {useEffect, useState} from "react";
-import {deleteItems, Item, saveList} from "../database/SaveList";
+import {deleteItems, deleteList, Item, saveList} from "../database/SaveList";
 import ItemElement from "../elements/ItemElement";
 import ListButton from "../elements/ListButton";
 import ListInput from "../elements/ListInput";
@@ -84,6 +84,9 @@ export default function CreateList() {
     }
 
     async function handleGetShareID(){
+        if(!shareID){
+            return;
+        }
         const id = await getShareID(ownerID);
         setShareID(id);
     }
@@ -127,6 +130,15 @@ export default function CreateList() {
         navigator.clipboard.writeText(text).then(() => alert("Copied to clipboard!"))
     }
 
+    function deleteAndClearList(){
+        deleteList(ownerID)
+        setOwnerID("");
+        setShareID("");
+        setItems([]);
+        setNewList(true);
+        setListName("");
+    }
+
     return (
         <div>
             <div className={`m-2 flex flex-col items-center transition-all duration-100 ${showAddItem || showEditItem ? "blur-xs" : ""}`}>
@@ -146,6 +158,7 @@ export default function CreateList() {
                     </div>
                     <div className={"pt-2 flex justify-space-between space-x-1.5"}>
                         <ListButton onClick={() => setShowAddItem(!showAddItem)} buttonText={'Add Item'}/>
+                        <ListButton onClick={() => deleteAndClearList()} buttonText={'Delete List'}/>
                         {changesSaved && <Notification text={"Changes Saved!"}/>}
                     </div>
                 </div>
