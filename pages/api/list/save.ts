@@ -1,6 +1,7 @@
 import {VercelRequest, VercelResponse} from '@vercel/node'
 import prismaClient from "../../../lib/prisma"
 import {nanoid} from "nanoid";
+import {put} from "@vercel/blob";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
     const data = req.body;
@@ -28,7 +29,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                             itemQuantity: item.itemQuantity,
                             itemQuantityPurchased: item.itemQuantityPurchased,
                             itemLink: item.itemLink,
-                            itemImage: item.itemImage,
+                            itemImageURL: item.itemImageURL,
                             itemDescription: item.itemDescription,
                         },
                     });
@@ -41,7 +42,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                             itemQuantity: item.itemQuantity,
                             itemQuantityPurchased: item.itemQuantityPurchased,
                             itemLink: item.itemLink,
-                            itemImage: item.itemImage,
+                            itemImageURL: item.itemImageURL,
                             itemDescription: item.itemDescription,
                         },
                     });

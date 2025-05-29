@@ -96,13 +96,15 @@ export default function CreateList() {
         }
     }
     function editItem(itemData: Item) {
+        console.log(itemData);
         const item = items.find(i => i.itemID === itemData.itemID);
         if (item) {
             item.itemName = itemData.itemName;
             item.itemQuantity = itemData.itemQuantity;
-            item.itemImage = itemData.itemImage;
+            item.itemImageURL = itemData.itemImageURL;
             item.itemLink = itemData.itemLink;
             item.itemDescription = itemData.itemDescription;
+            item.itemImageFile = itemData.itemImageFile;
             setEditData(undefined);
             listChanged();
             toggleChangesSaved();
@@ -131,10 +133,10 @@ export default function CreateList() {
                 <div className={"w-full max-w-4xl space-y-1.5"}>
                     <h1 className={"text-4xl"}>{newList ? "Edit" : "Create New"} List</h1>
                     <div className={"pb-4 border-4 rounded-md border-gray-400 p-4 bg-gray-300"}>
-                        <ListInput label={'List Name: '} type={'text'} value={listName} onChange={(e) => setListName(e.target.value)} onFinishEdit={() => {listChanged(); toggleChangesSaved();}}/>
+                        <ListInput label={'List Name: '} type={'text'} value={listName} onChange={(e) => setListName(e.target.value)} onBlur={() => {listChanged(); toggleChangesSaved();}}/>
                     </div>
                     <div className={"h-108 overflow-y-auto border-4 rounded-md border-gray-400 p-4 bg-gray-300"}>
-                        {items.map((item, index) => <ItemElement key={index} itemID={item.itemID} itemName={item.itemName} itemQuantity={item.itemQuantity} itemQuantityPurchased={item.itemQuantityPurchased} itemLink={item.itemLink} itemImage={item.itemImage} itemDescription={item.itemDescription} editItem={fetchEditItem} deleteItem={deleteItem} />)}
+                        {items.map((item, index) => <ItemElement key={index} item={item} editItem={fetchEditItem} deleteItem={deleteItem} />)}
                     </div>
                     <div className={"bg-gray-300 border-gray-400 border-4 rounded-md shadow-sm p-4"}>
                         <h2><strong>Edit Link:</strong> <a onClick={() => addToClipboard(linkFromID(true))} className={"cursor-pointer text-gray-800 hover:text-orange-400"}>{linkFromID(true)}</a></h2>

@@ -13,7 +13,7 @@ model Item {
   itemName              String
   itemQuantity          Int     @default(1)
   itemLink              String?
-  itemImage             String?
+  itemImageURL          String?
   itemDescription       String?
   itemQuantityPurchased Int     @default(0)
   List                  List    @relation(fields: [ownerID], references: [ownerID])
