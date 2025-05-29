@@ -99,7 +99,6 @@ export default function CreateList() {
         }
     }
     function editItem(itemData: Item) {
-        console.log(itemData);
         const item = items.find(i => i.itemID === itemData.itemID);
         if (item) {
             item.itemName = itemData.itemName;

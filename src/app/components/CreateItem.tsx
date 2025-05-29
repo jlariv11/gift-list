@@ -16,7 +16,7 @@ export default function CreateItem({setShowAddItem, addItem, itemProps, modalDiv
     const [itemName, setItemName] = useState('');
     const [itemQuantity, setItemQuantity] = useState(1);
     const [itemLink, setItemLink] = useState('');
-    const [itemImageURL, setItemImageURL] = useState('');
+    const [itemImageURL, setItemImageURL] = useState<string | null>(null);
     const [itemDescription, setItemDescription] = useState('');
 
     const [itemImageFile, setItemImageFile] = useState<FormData>();
@@ -65,7 +65,7 @@ export default function CreateItem({setShowAddItem, addItem, itemProps, modalDiv
                             <ListInput label={'Item Link:'} type={'text'} value={itemLink} onChange={(e) => setItemLink(e.target.value)}></ListInput>
                         </div>
                         <div>
-                            <ListInput label={'Item Image URL:'} type={'text'} value={itemImageURL} onChange={(e) => setItemImageURL(e.target.value)}></ListInput>
+                            <ListInput label={'Item Image URL:'} type={'text'} value={itemImageURL ? itemImageURL : ""} onChange={(e) => setItemImageURL(e.target.value)}></ListInput>
                             <ListInput label={'Upload Image from Files:'} type={'file'} accept={"image/*"} onChange={(e) => {
                                 const formData = new FormData();
                                 const file = e.target.files?.[0];
