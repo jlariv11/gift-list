@@ -13,6 +13,7 @@ const NavBarElement = ({text, link}: NavBarProps) => {
 }
 
 export default function NavBar() {
+    const router = useRouter();
     return (
         <>
             <div className={"w-full bg-gray-400 p-4 border-gray-300 border-4 rounded-xl"}>
@@ -24,7 +25,8 @@ export default function NavBar() {
                         <NavBarElement text={"View List"} link={"/ShareList"}/>
                     </div>
                     <div>
-                        <FaRegUserCircle size={48} className={"w-full h-full text-orange-400 hover:text-orange-300"}/>
+                        <FaRegUserCircle size={48} onClick={() => router.push("/auth/login")} className={"w-full h-full text-orange-400 hover:text-orange-300"}/>
+                        <FaRegUserCircle size={48} onClick={() => router.push("/auth/logout")} className={"w-full h-full text-blue-400 hover:text-orange-300"}/>
                     </div>
                 </div>
 
