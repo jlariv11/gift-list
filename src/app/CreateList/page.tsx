@@ -1,13 +1,14 @@
 "use client"
-import {useEffect, useState} from "react";
+import {useContext, useEffect, useState} from "react";
 import {deleteItems, deleteList, Item, saveList} from "../database/SaveList";
 import ItemElement from "../elements/ItemElement";
 import ListButton from "../elements/ListButton";
 import ListInput from "../elements/ListInput";
-import {getShareID, loadEditList} from "../database/LoadList";
 import CreateItem from "../components/CreateItem";
 import {useSearchParams} from "next/navigation";
 import Notification from "@/app/components/Notification";
+import {getShareID, loadEditList} from "@/app/database/LoadList";
+import {SessionContext} from "../SessionContext";
 
 export interface ListProps {
     listName: string;
@@ -29,6 +30,7 @@ export default function CreateList() {
     const [changesSaved, setChangesSaved] = useState(false);
 
     const searchParams = useSearchParams();
+    const session = useContext(SessionContext);
 
     function linkFromID(edit: boolean): string {
         if (edit && !ownerID) {
@@ -62,6 +64,7 @@ export default function CreateList() {
         const listData = {
             listName: listName,
             ownerID: ownerID,
+            auth0Owner: (newList && session) ? session.user.email : null, // Only want to give ownership if it's a new list
             shareID: shareID,
             items: items,
         }

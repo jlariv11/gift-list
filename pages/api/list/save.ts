@@ -8,7 +8,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     try {
         const itemIDs: number[] = [];
-
         await prismaClient.$transaction(async (tx) => {
             await tx.list.upsert({
                 where: { ownerID },
@@ -16,6 +15,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 create: {
                     ownerID,
                     listName: data.listName,
+                    auth0Owner: data.auth0Owner || null,
                 },
             });
 

@@ -30,7 +30,7 @@ const ItemElement = ({item, editItem, deleteItem, updatePurchaseCount}: ItemElem
                     <h2>Description:</h2>
                     <p className={"overflow-x-auto max-w-xs"}>{item.itemDescription}</p>
                 </span>
-                    <img width={100} src={item.itemImageURL} alt={item.itemImageURL}></img>
+                    <img width={100} src={item.itemImageURL || ""} alt={item.itemImageURL || "Image"}></img>
                     {editItem && (
                         <div className={"space-x-1.5"}>
                             <ListButton onClick={() => {if(item.itemID)editItem?.(item.itemID)}} buttonIcon={<FaPencil />}/>
