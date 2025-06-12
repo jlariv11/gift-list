@@ -22,7 +22,7 @@ model Item {
 model List {
   ownerID    String  @id
   shareID    String? @unique
-  auth0Owner String? @unique
+  auth0Owner String?
   listName   String  @default("List")
   Item       Item[]
 }

@@ -1,5 +1,6 @@
 interface ListInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
     label: string;
+    className?: string;
 }
 function ListInput(props: ListInputProps) {
     return (
@@ -7,7 +8,7 @@ function ListInput(props: ListInputProps) {
             <div>
                 {props.label}
             </div>
-            <input {...props} className="border-2 border-gray-200 rounded-md shadow-sm"></input>
+            <input {...props} className={`border-2 border-gray-200 rounded-md shadow-sm ${props.className}`}></input>
         </div>
     )
 }

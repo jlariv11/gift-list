@@ -21,6 +21,7 @@ const NavBarElement = ({text, link}: NavBarElementProps) => {
 
 
 export default function NavBar({session}: NavBarProps) {
+    const router = useRouter();
     return (
         <>
             <div className={"w-full bg-gray-400 p-4 border-gray-300 border-4 rounded-xl"}>
@@ -32,7 +33,7 @@ export default function NavBar({session}: NavBarProps) {
                         <NavBarElement text={"View List"} link={"/ShareList"}/>
                     </div>
                     <div>
-                        {session ? <Image className={"hover:cursor-pointer"} onClick={() => window.location.href = "auth/logout"} src={session.user.picture || ""} alt={"User Icon"} width={50} height={50}/> : <ListButton buttonText={"Log In"} onClick={() => window.location.href = "auth/login"} />}
+                        {session ? <Image className={"hover:cursor-pointer"} onClick={() => router.push("/AccountPage")} src={session.user.picture || ""} alt={"User Icon"} width={50} height={50}/> : <ListButton buttonText={"Log In"} onClick={() => window.location.href = "auth/login"} />}
                     </div>
                 </div>
 

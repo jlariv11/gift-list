@@ -9,6 +9,8 @@ import {useSearchParams} from "next/navigation";
 import Notification from "@/app/components/Notification";
 import {getShareID, loadEditList} from "@/app/database/LoadList";
 import {SessionContext} from "../SessionContext";
+import Modal from "@/app/components/Modal";
+import DeleteModal from "@/app/components/DeleteConfirmation";
 
 export interface ListProps {
     listName: string;
@@ -22,6 +24,7 @@ export default function CreateList() {
     const [items, setItems] = useState<Item[]>([]);
     const [showAddItem, setShowAddItem] = useState(false);
     const [showEditItem, setShowEditItem] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [editData, setEditData] = useState<Item>();
     const [ownerID, setOwnerID] = useState("");
     const [shareID, setShareID] = useState<string | undefined>(undefined);
@@ -87,7 +90,7 @@ export default function CreateList() {
     }
 
     async function handleGetShareID(){
-        if(!shareID){
+        if(!ownerID){
             return;
         }
         const id = await getShareID(ownerID);
@@ -143,9 +146,9 @@ export default function CreateList() {
 
     return (
         <div>
-            <div className={`m-2 flex flex-col items-center transition-all duration-100 ${showAddItem || showEditItem ? "blur-xs" : ""}`}>
+            <div className={`m-2 flex flex-col items-center transition-all duration-100 ${showAddItem || showEditItem || showDeleteModal ? "blur-xs" : ""}`}>
                 <div className={"w-full max-w-4xl space-y-1.5"}>
-                    <h1 className={"text-4xl"}>{newList ? "Edit" : "Create New"} List</h1>
+                    <h1 className={"text-4xl"}>{newList ? "Create New" : "Edit"} List</h1>
                     <div className={"pb-4 border-4 rounded-md border-gray-400 p-4 bg-gray-300"}>
                         <ListInput label={'List Name: '} type={'text'} value={listName} onChange={(e) => setListName(e.target.value)} onBlur={() => {listChanged(); toggleChangesSaved();}}/>
                     </div>
@@ -160,18 +163,20 @@ export default function CreateList() {
                     </div>
                     <div className={"pt-2 flex justify-space-between space-x-1.5"}>
                         <ListButton onClick={() => setShowAddItem(!showAddItem)} buttonText={'Add Item'}/>
-                        <ListButton onClick={() => deleteAndClearList()} buttonText={'Delete List'}/>
+                        <ListButton onClick={() => setShowDeleteModal(true)} buttonText={'Delete List'}/>
                         {changesSaved && <Notification text={"Changes Saved!"}/>}
                     </div>
                 </div>
             </div>
-            <div id={"addEditModal"}></div>
+            <div id={"modal"}></div>
             {showAddItem && (
-                <CreateItem setShowAddItem={setShowAddItem} addItem={addItem} modalDivID={"addEditModal"} />
+                <Modal modalTitle={"Add Item"} modalBody={<CreateItem setShowAddItem={setShowAddItem} addItem={addItem}/>} modalDivID={"modal"} showModalToggle={setShowAddItem} />
             )}
             {showEditItem && (
-                <CreateItem setShowAddItem={setShowEditItem} addItem={editItem} itemProps={editData} modalDivID={"addEditModal"} />
+                <Modal modalTitle={"Edit Item"} modalBody={<CreateItem setShowAddItem={setShowEditItem} addItem={editItem} itemProps={editData}/>} modalDivID={"modal"} showModalToggle={setShowEditItem} />
             )}
+            {showDeleteModal && <Modal modalTitle={"Delete List?"} modalDivID={"modal"} modalBody={<DeleteModal toggleModal={setShowDeleteModal} deleteFunction={deleteAndClearList} />} showModalToggle={setShowDeleteModal} />}
+
         </div>
     )
 }

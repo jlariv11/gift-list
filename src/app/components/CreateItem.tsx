@@ -2,7 +2,6 @@ import {useEffect, useState} from "react";
 import {Item} from "../database/SaveList"
 import ListInput from "../elements/ListInput";
 import ListButton from "../elements/ListButton";
-import ReactDOM from "react-dom";
 import {IoMdCloseCircleOutline} from "react-icons/io";
 import ListTextarea from "@/app/elements/ListTextarea";
 
@@ -10,9 +9,8 @@ type CreateItemProps = {
     setShowAddItem: (showAddItem: boolean) => void
     addItem: (item: Item) => void
     itemProps?: Item
-    modalDivID: string
 }
-export default function CreateItem({setShowAddItem, addItem, itemProps, modalDivID}: CreateItemProps) {
+export default function CreateItem({setShowAddItem, addItem, itemProps}: CreateItemProps) {
     const [itemName, setItemName] = useState('');
     const [itemQuantity, setItemQuantity] = useState(1);
     const [itemLink, setItemLink] = useState('');
@@ -46,7 +44,7 @@ export default function CreateItem({setShowAddItem, addItem, itemProps, modalDiv
         }
     }, [])
 
-    const createItemContent = (
+    return (
         <div className={"absolute top-0 left-0 w-full h-full flex justify-center items-center"}>
             <div className={"w-128 h-141 pb-4 border-4 rounded-md border-gray-400 p-4 bg-gray-300 shadow-lg"}>
                 <div className={"p-2"}>
@@ -83,8 +81,5 @@ export default function CreateItem({setShowAddItem, addItem, itemProps, modalDiv
                 </div>
             </div>
         </div>
-    )
-
-    const modalDiv = document.getElementById(modalDivID);
-    return (modalDiv !== null) ? ReactDOM.createPortal(createItemContent, modalDiv) : <div></div>;
+    );
 }
