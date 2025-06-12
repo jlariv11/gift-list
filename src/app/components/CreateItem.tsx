@@ -2,7 +2,6 @@ import {useEffect, useState} from "react";
 import {Item} from "../database/SaveList"
 import ListInput from "../elements/ListInput";
 import ListButton from "../elements/ListButton";
-import ReactDOM from "react-dom";
 import {IoMdCloseCircleOutline} from "react-icons/io";
 import ListTextarea from "@/app/elements/ListTextarea";
 
@@ -10,13 +9,12 @@ type CreateItemProps = {
     setShowAddItem: (showAddItem: boolean) => void
     addItem: (item: Item) => void
     itemProps?: Item
-    modalDivID: string
 }
-export default function CreateItem({setShowAddItem, addItem, itemProps, modalDivID}: CreateItemProps) {
+export default function CreateItem({setShowAddItem, addItem, itemProps}: CreateItemProps) {
     const [itemName, setItemName] = useState('');
     const [itemQuantity, setItemQuantity] = useState(1);
     const [itemLink, setItemLink] = useState('');
-    const [itemImageURL, setItemImageURL] = useState('');
+    const [itemImageURL, setItemImageURL] = useState<string | null>(null);
     const [itemDescription, setItemDescription] = useState('');
 
     const [itemImageFile, setItemImageFile] = useState<FormData>();
@@ -46,7 +44,7 @@ export default function CreateItem({setShowAddItem, addItem, itemProps, modalDiv
         }
     }, [])
 
-    const createItemContent = (
+    return (
         <div className={"absolute top-0 left-0 w-full h-full flex justify-center items-center"}>
             <div className={"w-128 h-141 pb-4 border-4 rounded-md border-gray-400 p-4 bg-gray-300 shadow-lg"}>
                 <div className={"p-2"}>
@@ -65,7 +63,7 @@ export default function CreateItem({setShowAddItem, addItem, itemProps, modalDiv
                             <ListInput label={'Item Link:'} type={'text'} value={itemLink} onChange={(e) => setItemLink(e.target.value)}></ListInput>
                         </div>
                         <div>
-                            <ListInput label={'Item Image URL:'} type={'text'} value={itemImageURL} onChange={(e) => setItemImageURL(e.target.value)}></ListInput>
+                            <ListInput label={'Item Image URL:'} type={'text'} value={itemImageURL ? itemImageURL : ""} onChange={(e) => setItemImageURL(e.target.value)}></ListInput>
                             <ListInput label={'Upload Image from Files:'} type={'file'} accept={"image/*"} onChange={(e) => {
                                 const formData = new FormData();
                                 const file = e.target.files?.[0];
@@ -83,8 +81,5 @@ export default function CreateItem({setShowAddItem, addItem, itemProps, modalDiv
                 </div>
             </div>
         </div>
-    )
-
-    const modalDiv = document.getElementById(modalDivID);
-    return (modalDiv !== null) ? ReactDOM.createPortal(createItemContent, modalDiv) : <div></div>;
+    );
 }

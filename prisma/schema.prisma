@@ -20,8 +20,9 @@ model Item {
 }
 
 model List {
-  ownerID  String  @id
-  shareID  String? @unique
-  listName String  @default("List")
-  Item     Item[]
+  ownerID    String  @id
+  shareID    String? @unique
+  auth0Owner String?
+  listName   String  @default("List")
+  Item       Item[]
 }

@@ -1,18 +1,27 @@
 "use client"
 import {useRouter} from "next/navigation";
-import {FaRegUserCircle} from "react-icons/fa";
+import ListButton from "@/app/elements/ListButton";
+import {SessionData} from "@auth0/nextjs-auth0/types";
+import Image from "next/image";
 
-interface NavBarProps {
+interface NavBarElementProps {
     text: string;
     link: string;
 }
 
-const NavBarElement = ({text, link}: NavBarProps) => {
+interface NavBarProps {
+    session: SessionData | null;
+}
+
+const NavBarElement = ({text, link}: NavBarElementProps) => {
     const router = useRouter();
     return (<div className={"text-gray-800 bg-orange-400 p-2 rounded-xl hover:bg-orange-300 shadow-md flex justify-center items-center"} onClick={() => router.push(link)}>{text}</div>)
 }
 
-export default function NavBar() {
+
+
+export default function NavBar({session}: NavBarProps) {
+    const router = useRouter();
     return (
         <>
             <div className={"w-full bg-gray-400 p-4 border-gray-300 border-4 rounded-xl"}>
@@ -24,7 +33,7 @@ export default function NavBar() {
                         <NavBarElement text={"View List"} link={"/ShareList"}/>
                     </div>
                     <div>
-                        <FaRegUserCircle size={48} className={"w-full h-full text-orange-400 hover:text-orange-300"}/>
+                        {session ? <Image className={"hover:cursor-pointer"} onClick={() => router.push("/AccountPage")} src={session.user.picture || ""} alt={"User Icon"} width={50} height={50}/> : <ListButton buttonText={"Log In"} onClick={() => window.location.href = "auth/login"} />}
                     </div>
                 </div>
 

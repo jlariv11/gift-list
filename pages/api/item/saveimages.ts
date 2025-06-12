@@ -34,8 +34,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 itemImageURL: url
             }
         })
+        res.status(200).json({url});
     });
-
-    res.status(200).json({});
 }
 
