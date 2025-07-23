@@ -39,7 +39,7 @@ export default function ShareList() {
         const item = items.find(i => i.itemID === itemID);
         const localItem = purchasedItems.find(i => i.itemID === itemID);
         if(item && localItem) {
-            localItem.itemQuantityPurchased = quantity - (item.itemQuantityPurchased || 0);
+            localItem.itemQuantityPurchased = Math.min(quantity - (item.itemQuantityPurchased || 0), item.itemQuantity);
             if(localItem.itemQuantityPurchased <= 0) {
                 setPurchasedItems(purchasedItems.filter(i => i.itemID !== itemID));
             }
@@ -63,7 +63,7 @@ export default function ShareList() {
 
     return (
         <div>
-            <div className={'m-2 flex flex-col items-center'}>
+            <div className={`m-2 px-4 sm:px-6 md:px-8 flex flex-col items-center transition-all duration-100 ${showModal ? "blur-xs" : ""}`}>
                 <div className={"w-full max-w-4xl space-y-1.5"}>
                     <h1 className={"text-4xl"}>View {listName}</h1>
                     <div className={"h-108 overflow-y-auto border-4 rounded-md border-gray-400 p-4 bg-gray-300"}>

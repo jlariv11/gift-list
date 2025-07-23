@@ -10,7 +10,7 @@ import Notification from "@/app/components/Notification";
 import {getShareID, loadEditList} from "@/app/database/LoadList";
 import {SessionContext} from "../SessionContext";
 import Modal from "@/app/components/Modal";
-import DeleteModal from "@/app/components/DeleteConfirmation";
+import WarningModal from "@/app/components/WarningModal";
 
 export interface ListProps {
     listName: string;
@@ -25,6 +25,7 @@ export default function CreateList() {
     const [showAddItem, setShowAddItem] = useState(false);
     const [showEditItem, setShowEditItem] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [showNewListModal, setShowNewListModal] = useState(false);
     const [editData, setEditData] = useState<Item>();
     const [ownerID, setOwnerID] = useState("");
     const [shareID, setShareID] = useState<string | undefined>(undefined);
@@ -136,7 +137,11 @@ export default function CreateList() {
     }
 
     function deleteAndClearList(){
-        deleteList(ownerID)
+        deleteList(ownerID);
+        clearList();
+    }
+
+    function clearList(){
         setOwnerID("");
         setShareID("");
         setItems([]);
@@ -146,7 +151,7 @@ export default function CreateList() {
 
     return (
         <div>
-            <div className={`m-2 flex flex-col items-center transition-all duration-100 ${showAddItem || showEditItem || showDeleteModal ? "blur-xs" : ""}`}>
+            <div className={`m-2 px-4 sm:px-6 md:px-8 flex flex-col items-center transition-all duration-100 ${showAddItem || showEditItem || showDeleteModal ? "blur-xs" : ""}`}>
                 <div className={"w-full max-w-4xl space-y-1.5"}>
                     <h1 className={"text-4xl"}>{newList ? "Create New" : "Edit"} List</h1>
                     <div className={"pb-4 border-4 rounded-md border-gray-400 p-4 bg-gray-300"}>
@@ -156,15 +161,18 @@ export default function CreateList() {
                         {items.map((item, index) => <ItemElement key={index} item={item} editItem={fetchEditItem} deleteItem={deleteItem} />)}
                     </div>
                     <div className={"bg-gray-300 border-gray-400 border-4 rounded-md shadow-sm p-4"}>
-                        <h2><strong>Edit Link:</strong> <a onClick={() => addToClipboard(linkFromID(true))} className={"cursor-pointer text-gray-800 hover:text-orange-400"}>{linkFromID(true)}</a></h2>
+                        <h2><strong>Edit Link:</strong> <a onClick={() => addToClipboard(linkFromID(true))} className={"cursor-pointer text-gray-800 hover:text-orange-400 truncate"}>{linkFromID(true)}</a></h2>
                         <div>
-                            <h2><strong>Share Link:</strong> <a onClick={() => addToClipboard(linkFromID(false))} className={"cursor-pointer text-gray-800 hover:text-orange-400"}>{linkFromID(false)}</a> <span hidden={!!shareID}> <ListButton onClick={() => handleGetShareID()} buttonText={"Create Sharable Link"} /></span> </h2>
+                            <h2><strong>Share Link:</strong> <a onClick={() => addToClipboard(linkFromID(false))} className={"cursor-pointer text-gray-800 hover:text-orange-400 truncate"}>{linkFromID(false)}</a> <span hidden={!!shareID}> <ListButton onClick={() => handleGetShareID()} buttonText={"Create Sharable Link"} /></span> </h2>
                         </div>
                     </div>
-                    <div className={"pt-2 flex justify-space-between space-x-1.5"}>
-                        <ListButton onClick={() => setShowAddItem(!showAddItem)} buttonText={'Add Item'}/>
-                        <ListButton onClick={() => setShowDeleteModal(true)} buttonText={'Delete List'}/>
-                        {changesSaved && <Notification text={"Changes Saved!"}/>}
+                    <div className={"bg-gray-300 border-gray-400 border-4 rounded-md shadow-sm p-4"}>
+                        <div className={"pt-2 flex space-x-1.5"}>
+                            <ListButton onClick={() => setShowAddItem(!showAddItem)} buttonText={'Add Item'}/>
+                            <ListButton onClick={() => setShowDeleteModal(true)} buttonText={'Delete List'}/>
+                            <ListButton onClick={() => setShowNewListModal(true)} buttonText={'New List'}/>
+                            {changesSaved && <Notification text={"Changes Saved!"}/>}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -175,7 +183,8 @@ export default function CreateList() {
             {showEditItem && (
                 <Modal modalTitle={"Edit Item"} modalBody={<CreateItem setShowAddItem={setShowEditItem} addItem={editItem} itemProps={editData}/>} modalDivID={"modal"} showModalToggle={setShowEditItem} />
             )}
-            {showDeleteModal && <Modal modalTitle={"Delete List?"} modalDivID={"modal"} modalBody={<DeleteModal toggleModal={setShowDeleteModal} deleteFunction={deleteAndClearList} />} showModalToggle={setShowDeleteModal} />}
+            {showDeleteModal && <Modal modalTitle={"Delete List?"} modalDivID={"modal"} modalBody={<WarningModal toggleModal={setShowDeleteModal} warning={"Are you sure you want to delete this list?"} actionFunction={deleteAndClearList} />} showModalToggle={setShowDeleteModal} />}
+            {showNewListModal && <Modal modalTitle={"Create New List?"} modalDivID={"modal"} modalBody={<WarningModal toggleModal={setShowNewListModal} warning={"This will clear your current list. Are you sure?"} actionFunction={clearList} />} showModalToggle={setShowNewListModal} />}
 
         </div>
     )

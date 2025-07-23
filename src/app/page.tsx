@@ -2,6 +2,7 @@
 
 import {useRouter, useSearchParams} from "next/navigation";
 import {useEffect} from "react";
+import CreateList from "@/app/CreateList/page";
 
 export default function Home() {
 
@@ -19,7 +20,6 @@ export default function Home() {
   }, [searchParams])
 
   return(
-      <>
-      </>
+      <CreateList />
   )
 }

@@ -8,7 +8,7 @@ import {addUserToList, getUserListInfo} from "@/app/database/UserLists";
 import {SessionData} from "@auth0/nextjs-auth0/types";
 import {FaTrashCan} from "react-icons/fa6";
 import {deleteList} from "@/app/database/SaveList";
-import DeleteModal from "@/app/components/DeleteConfirmation";
+import WarningModal from "@/app/components/WarningModal";
 import {useRouter} from "next/navigation";
 
 interface ListProps {
@@ -95,7 +95,7 @@ export default function AccountPage() {
 
     return (
         <div>
-            <div className={`m-2 flex flex-col items-center transition-all duration-100 ${deleteListModal || addListModal ? "blur-xs" : ""}`}>
+            <div className={`m-2 px-4 sm:px-6 md:px-8 flex flex-col items-center transition-all duration-100 ${deleteListModal || addListModal ? "blur-xs" : ""}`}>
                 <div className={"w-full max-w-4xl space-y-1.5"}>
                     <div className={"space-y-5 b-4 border-4 rounded-md border-gray-400 p-4 bg-gray-300"}>
                         <div className={"flex justify-between"}>
@@ -128,7 +128,7 @@ export default function AccountPage() {
             </div>
             <div id={"modal"}></div>
             {addListModal && <Modal modalTitle={"Add List"} modalDivID={"modal"} showModalToggle={setAddListModal} modalBody={<ListModal session={session} setAddListModal={setAddListModal} updateLists={updateLists}/>}></Modal>}
-            {deleteListModal && <Modal modalTitle={"Delete List?"} modalDivID={"modal"} showModalToggle={setDeleteListModal} modalBody={<DeleteModal toggleModal={setDeleteListModal} deleteFunction={removeList}/>}></Modal>}
+            {deleteListModal && <Modal modalTitle={"Delete List?"} modalDivID={"modal"} showModalToggle={setDeleteListModal} modalBody={<WarningModal warning={"Are you sure you want to delete this list?"} toggleModal={setDeleteListModal} actionFunction={removeList}/>}></Modal>}
         </div>
     );
 }

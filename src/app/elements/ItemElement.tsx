@@ -31,7 +31,7 @@ const ItemElement = ({item, editItem, deleteItem, updatePurchaseCount}: ItemElem
                             <div>
                                 <h2>Purchased:</h2>
                                 <div className={"flex"}>
-                                    <ListInput className={"text-center w-10"} label={""} type={"number"} value={localQuantityPurchased} min={item.itemQuantityPurchased} max={item.itemQuantity} onChange={(e) => {setLocalQuantityPurchased(clamp(Number(e.target.value), item.itemQuantityPurchased || 0, item.itemQuantity)); updatePurchaseCount?.(item.itemID, Number(e.target.value))}}/>
+                                    <ListInput className={"text-center w-10"} label={""} type={"number"} value={localQuantityPurchased} min={item.itemQuantityPurchased} max={item.itemQuantity} onChange={(e) => {setLocalQuantityPurchased(clamp(Number(e.target.value), item.itemQuantityPurchased || 0, item.itemQuantity)); updatePurchaseCount?.(item.itemID, clamp(Number(e.target.value), item.itemQuantityPurchased || 0, item.itemQuantity))}}/>
                                     <h2 className={"px-1 text-xl"}>of {item.itemQuantity}</h2>
                                 </div>
                             </div>
