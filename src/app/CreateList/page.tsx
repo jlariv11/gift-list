@@ -26,7 +26,7 @@ export default function CreateList() {
     const [showEditItem, setShowEditItem] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [showNewListModal, setShowNewListModal] = useState(false);
-    const [editData, setEditData] = useState<Item>();
+    const [editData, setEditData] = useState<Item[]>();
     const [ownerID, setOwnerID] = useState("");
     const [shareID, setShareID] = useState<string | undefined>(undefined);
     const [newList, setNewList] = useState(false);
@@ -85,8 +85,8 @@ export default function CreateList() {
         }
     }, [items]);
 
-    function addItem(item: Item) {
-        setItems([...items, item]);
+    function addItems(newItems: Item[]) {
+        setItems([...items, ...newItems]);
         toggleChangesSaved();
     }
 
@@ -99,30 +99,39 @@ export default function CreateList() {
     }
 
     function fetchEditItem(itemID: number) {
-        const item = items.find(i => i.itemID === itemID);
-        if (item) {
-            setEditData(item);
+        const itemData = items.filter(i => (i.itemID === itemID || i.alternateForId === itemID));
+        if (itemData) {
+            setEditData(itemData);
             setShowEditItem(true);
         }
     }
-    function editItem(itemData: Item) {
-        const item = items.find(i => i.itemID === itemData.itemID);
-        if (item) {
-            item.itemName = itemData.itemName;
-            item.itemQuantity = itemData.itemQuantity;
-            item.itemImageURL = itemData.itemImageURL;
-            item.itemLink = itemData.itemLink;
-            item.itemDescription = itemData.itemDescription;
-            item.itemImageFile = itemData.itemImageFile;
-            setEditData(undefined);
-            listChanged();
-            toggleChangesSaved();
+    function editItem(itemInfo: Item[]) {
+        for (const itemData of itemInfo) {
+            const item = items.find(i => i.itemID === itemData.itemID);
+            if (item) {
+                item.itemName = itemData.itemName;
+                item.itemQuantity = itemData.itemQuantity;
+                item.itemImageURL = itemData.itemImageURL;
+                item.itemLink = itemData.itemLink;
+                item.itemDescription = itemData.itemDescription;
+                item.itemImageFile = itemData.itemImageFile;
+                setEditData(undefined);
+                listChanged();
+                toggleChangesSaved();
+            }else{
+                addItems([itemData]);
+            }
         }
     }
 
     async function deleteItem(itemID: number) {
-        await deleteItems([itemID]);
-        setItems(items.filter(i => i.itemID !== itemID));
+        await deleteItems(
+            items
+                .filter(i => i.itemID === itemID || i.alternateForId === itemID)
+                .map(i => i.itemID)
+                .filter((id): id is number => typeof id === 'number')
+        );
+        setItems(items.filter(i => (i.itemID !== itemID && i.alternateForId !== itemID)));
         toggleChangesSaved();
 
     }
@@ -149,6 +158,20 @@ export default function CreateList() {
         setListName("");
     }
 
+
+    function itemsAsGroupedArray(){
+        const groupedItems: Item[][] = [];
+        for(const item of items){
+            if(item.alternateForId){
+                console.log("skipping", item.itemName, item.alternateForId)
+                continue;
+            }
+            const alternates = items.filter(i => i.alternateForId === item.itemID);
+            groupedItems.push([item, ...alternates]);
+        }
+        return groupedItems;
+    }
+
     return (
         <div>
             <div className={`m-2 px-4 sm:px-6 md:px-8 flex flex-col items-center transition-all duration-100 ${showAddItem || showEditItem || showDeleteModal ? "blur-xs" : ""}`}>
@@ -158,7 +181,7 @@ export default function CreateList() {
                         <ListInput label={'List Name: '} type={'text'} value={listName} onChange={(e) => setListName(e.target.value)} onBlur={() => {listChanged(); toggleChangesSaved();}}/>
                     </div>
                     <div className={"h-108 overflow-y-auto border-4 rounded-md border-gray-400 p-4 bg-gray-300"}>
-                        {items.map((item, index) => <ItemElement key={index} item={item} editItem={fetchEditItem} deleteItem={deleteItem} />)}
+                        {itemsAsGroupedArray().map((items, index) => <ItemElement key={index} items={items} editItem={fetchEditItem} deleteItem={deleteItem} />)}
                     </div>
                     <div className={"bg-gray-300 border-gray-400 border-4 rounded-md shadow-sm p-4"}>
                         <h2><strong>Edit Link:</strong> <a onClick={() => addToClipboard(linkFromID(true))} className={"cursor-pointer text-gray-800 hover:text-orange-400 truncate"}>{linkFromID(true)}</a></h2>
@@ -178,10 +201,10 @@ export default function CreateList() {
             </div>
             <div id={"modal"}></div>
             {showAddItem && (
-                <Modal modalTitle={"Add Item"} modalBody={<CreateItem setShowAddItem={setShowAddItem} addItem={addItem}/>} modalDivID={"modal"} showModalToggle={setShowAddItem} />
+                <Modal modalTitle={"Add Item"} modalBody={<CreateItem ownerID={ownerID} setShowAddItem={setShowAddItem} addItems={addItems}/>} modalDivID={"modal"} showModalToggle={setShowAddItem} />
             )}
             {showEditItem && (
-                <Modal modalTitle={"Edit Item"} modalBody={<CreateItem setShowAddItem={setShowEditItem} addItem={editItem} itemProps={editData}/>} modalDivID={"modal"} showModalToggle={setShowEditItem} />
+                <Modal modalTitle={"Edit Item"} modalBody={<CreateItem ownerID={ownerID} setShowAddItem={setShowEditItem} addItems={editItem} itemProps={editData}/>} modalDivID={"modal"} showModalToggle={setShowEditItem} />
             )}
             {showDeleteModal && <Modal modalTitle={"Delete List?"} modalDivID={"modal"} modalBody={<WarningModal toggleModal={setShowDeleteModal} warning={"Are you sure you want to delete this list?"} actionFunction={deleteAndClearList} />} showModalToggle={setShowDeleteModal} />}
             {showNewListModal && <Modal modalTitle={"Create New List?"} modalDivID={"modal"} modalBody={<WarningModal toggleModal={setShowNewListModal} warning={"This will clear your current list. Are you sure?"} actionFunction={clearList} />} showModalToggle={setShowNewListModal} />}

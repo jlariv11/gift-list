@@ -17,6 +17,10 @@ model Item {
   itemDescription       String?
   itemQuantityPurchased Int     @default(0)
   List                  List    @relation(fields: [ownerID], references: [ownerID])
+
+  alternates     Item[] @relation("AlternateItems")
+  alternateFor   Item?  @relation("AlternateItems", fields: [alternateForId], references: [itemID])
+  alternateForId Int?
 }
 
 model List {

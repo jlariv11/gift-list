@@ -7,10 +7,11 @@ import ListTextarea from "@/app/elements/ListTextarea";
 
 type CreateItemProps = {
     setShowAddItem: (showAddItem: boolean) => void
-    addItem: (item: Item) => void
-    itemProps?: Item
+    addItems: (items: Item[]) => void
+    itemProps?: Item[]
+    ownerID: string;
 }
-export default function CreateItem({setShowAddItem, addItem, itemProps}: CreateItemProps) {
+export default function CreateItem({setShowAddItem, addItems, itemProps}: CreateItemProps) {
     const [itemName, setItemName] = useState('');
     const [itemQuantity, setItemQuantity] = useState(1);
     const [itemLink, setItemLink] = useState('');
@@ -19,28 +20,81 @@ export default function CreateItem({setShowAddItem, addItem, itemProps}: CreateI
 
     const [itemImageFile, setItemImageFile] = useState<FormData>();
 
-    function handleAddItem() {
+    const [alternates, setAlternates] = useState<Item[]>([]);
+    const [alternateIndex, setAlternateIndex] = useState(0);
+    const [original, setOriginal] = useState<Item>();
+
+
+    function createItem(){
         const item: Item = {
-            itemID: itemProps ? itemProps.itemID : undefined,
+            itemID: (itemProps && itemProps[alternateIndex]) ? alternates[alternateIndex].itemID : undefined,
             itemName,
             itemQuantity,
-            itemQuantityPurchased: itemProps ? itemProps.itemQuantityPurchased : undefined,
+            itemQuantityPurchased: (itemProps && itemProps[alternateIndex]) ? alternates[alternateIndex].itemQuantityPurchased : undefined,
             itemLink,
             itemImageURL,
             itemImageFile,
             itemDescription,
+            alternateForId: (alternates.length > 0 && original) ? original.itemID : undefined
         }
-        addItem(item);
+        return item;
+    }
+
+    function handleAddItem() {
+        console.log(alternates);
+        const updated = [...alternates];
+        updated[alternateIndex] = createItem();
+        setAlternates(updated);
+        addItems(updated);
         setShowAddItem(false);
     }
 
+    function handleCreateAlternate() {
+        const item = createItem();
+        const updated = [...alternates];
+        updated[alternateIndex] = item;
+        setAlternates(updated);
+        setOriginal(item);
+        handleSwitchItems(1);
+    }
+
+    function handleSwitchItems(dir: 1 | -1) {
+        if(dir === -1 && alternateIndex <= 0){
+            return;
+        }
+        const updated = [...alternates];
+        updated[alternateIndex] = createItem();
+        setAlternates(updated);
+        if(dir === 1 && alternateIndex + dir > (alternates.length - 1)) {
+            setAlternateIndex(alternateIndex + dir);
+            setItemName("");
+            setItemQuantity(1);
+            setItemLink("");
+            setItemImageURL("");
+            setItemDescription("");
+            setItemImageFile(new FormData());
+        }else {
+            const item = alternates[alternateIndex + dir];
+            setAlternateIndex(alternateIndex + dir);
+            setItemName(item.itemName);
+            setItemQuantity(item.itemQuantity);
+            setItemLink(item.itemLink);
+            setItemImageURL(item.itemImageURL);
+            setItemDescription(item.itemDescription);
+        }
+    }
+
+
+
     useEffect(() => {
         if(itemProps){
-            setItemName(itemProps.itemName);
-            setItemQuantity(itemProps.itemQuantity);
-            setItemLink(itemProps.itemLink);
-            setItemImageURL(itemProps.itemImageURL);
-            setItemDescription(itemProps.itemDescription);
+            setItemName(itemProps[alternateIndex].itemName);
+            setItemQuantity(itemProps[alternateIndex].itemQuantity);
+            setItemLink(itemProps[alternateIndex].itemLink);
+            setItemImageURL(itemProps[alternateIndex].itemImageURL);
+            setItemDescription(itemProps[alternateIndex].itemDescription);
+            setAlternates(itemProps);
+            setOriginal(itemProps[alternateIndex]);
         }
     }, [])
 
@@ -76,7 +130,15 @@ export default function CreateItem({setShowAddItem, addItem, itemProps}: CreateI
                         <div>
                             <ListTextarea label={'Item Description:'} cols={50} rows={5} value={itemDescription} onChange={(e) => setItemDescription(e.target.value)}></ListTextarea>
                         </div>
-                        <ListButton buttonText={"Save"} onClick={() => handleAddItem()}></ListButton>
+                        <div className={"flex justify-between"}>
+                            <div className={"space-x-1.5"}>
+                                <ListButton buttonText={"Save"} onClick={() => handleAddItem()}></ListButton>
+                            </div>
+                            <div className={"space-x-1.5"} hidden={!itemProps}>
+                                <ListButton disabled={alternateIndex <= 0} buttonText={"Prev Alt Item"} onClick={() => handleSwitchItems(-1)}></ListButton>
+                                <ListButton disabled={alternateIndex >= alternates.length} buttonText={"Next Alt Item"} onClick={() => handleSwitchItems(1)}></ListButton>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

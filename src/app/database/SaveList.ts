@@ -11,6 +11,7 @@ export interface Item {
     itemImageURL: string | null;
     itemImageFile: FormData | undefined;
     itemDescription: string;
+    alternateForId: number | undefined;
 }
 
 export async function saveList(listProps: ListProps) {
@@ -33,8 +34,12 @@ export async function saveList(listProps: ListProps) {
             item.itemImageURL = url.url;
         }
     }
-
     return data.ownerID;
+}
+
+export async function saveItem(ownerID: string, item: Item){
+    const data: {itemID: number} = (await axios.post(ROUTES.SAVE_ITEM, {ownerID, item})).data;
+    return data.itemID;
 }
 
 export async function saveSharedList(listProps: ListProps) {

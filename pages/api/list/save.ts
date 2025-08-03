@@ -5,7 +5,6 @@ import {nanoid} from "nanoid";
 export default async function handler(req: VercelRequest, res: VercelResponse) {
     const data = req.body;
     const ownerID = data.ownerID ? data.ownerID : nanoid();
-
     try {
         const itemIDs: number[] = [];
         await prismaClient.$transaction(async (tx) => {
@@ -30,6 +29,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                             itemLink: item.itemLink,
                             itemImageURL: item.itemImageURL,
                             itemDescription: item.itemDescription,
+                            alternateForId: item.alternateForId
                         },
                     });
                     itemIDs.push(item.itemID);
@@ -43,6 +43,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                             itemLink: item.itemLink,
                             itemImageURL: item.itemImageURL,
                             itemDescription: item.itemDescription,
+                            alternateForId: item.alternateForId
                         },
                     });
                     itemIDs.push(newItem.itemID);
