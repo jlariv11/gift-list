@@ -6,7 +6,7 @@ import {loadViewList} from "../database/LoadList";
 import ItemElement from "../elements/ItemElement";
 import {useSearchParams} from "next/navigation";
 import ReviewPurchases from "@/app/components/ReviewPurchases";
-import {itemsAsGroupedArray} from "@/app/CreateList/page";
+import {itemsAsGroupedArray} from "@/app/Helper";
 
 export interface SimpleItem {
     itemID: number | undefined;

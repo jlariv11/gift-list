@@ -11,25 +11,13 @@ import {getShareID, loadEditList} from "@/app/database/LoadList";
 import {SessionContext} from "../SessionContext";
 import Modal from "@/app/components/Modal";
 import WarningModal from "@/app/components/WarningModal";
+import {itemsAsGroupedArray} from "@/app/Helper";
 
 export interface ListProps {
     listName: string;
     ownerID: string;
     shareID: string | undefined;
     items: Item[];
-}
-
-export function itemsAsGroupedArray(items: Item[]) {
-    const groupedItems: Item[][] = [];
-    for(const item of items){
-        if(item.alternateForId){
-            console.log("skipping", item.itemName, item.alternateForId)
-            continue;
-        }
-        const alternates = items.filter(i => i.alternateForId === item.itemID);
-        groupedItems.push([item, ...alternates]);
-    }
-    return groupedItems;
 }
 
 export default function CreateList() {
