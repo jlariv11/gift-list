@@ -49,15 +49,6 @@ export default function CreateItem({setShowAddItem, addItems, itemProps}: Create
         setShowAddItem(false);
     }
 
-    function handleCreateAlternate() {
-        const item = createItem();
-        const updated = [...alternates];
-        updated[alternateIndex] = item;
-        setAlternates(updated);
-        setOriginal(item);
-        handleSwitchItems(1);
-    }
-
     function handleSwitchItems(dir: 1 | -1) {
         if(dir === -1 && alternateIndex <= 0){
             return;

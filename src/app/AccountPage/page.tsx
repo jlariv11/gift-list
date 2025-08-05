@@ -6,7 +6,6 @@ import Modal from "@/app/components/Modal";
 import ListInput from "@/app/elements/ListInput";
 import {addUserToList, getUserListInfo} from "@/app/database/UserLists";
 import {SessionData} from "@auth0/nextjs-auth0/types";
-import {FaTrashCan} from "react-icons/fa6";
 import {deleteList} from "@/app/database/SaveList";
 import WarningModal from "@/app/components/WarningModal";
 import {useRouter} from "next/navigation";
