@@ -6,6 +6,7 @@ import {loadViewList} from "../database/LoadList";
 import ItemElement from "../elements/ItemElement";
 import {useSearchParams} from "next/navigation";
 import ReviewPurchases from "@/app/components/ReviewPurchases";
+import {itemsAsGroupedArray} from "@/app/CreateList/page";
 
 export interface SimpleItem {
     itemID: number | undefined;
@@ -67,7 +68,7 @@ export default function ShareList() {
                 <div className={"w-full max-w-4xl space-y-1.5"}>
                     <h1 className={"text-4xl"}>View {listName}</h1>
                     <div className={"h-108 overflow-y-auto border-4 rounded-md border-gray-400 p-4 bg-gray-300"}>
-                        {items.filter(i => i.itemQuantity !== i.itemQuantityPurchased).map((item, index) => <ItemElement key={index} item={item} updatePurchaseCount={updatePurchaseCount}/>)}
+                        {itemsAsGroupedArray(items).filter(is => is.some(i => i.itemQuantity !== i.itemQuantityPurchased)).map((items, index) => <ItemElement key={index} items={items} updatePurchaseCount={updatePurchaseCount} />)}
                     </div>
                     <div>
                         <ListButton onClick={() => setShowModal(true)} buttonText={'Review Purchases'}/>

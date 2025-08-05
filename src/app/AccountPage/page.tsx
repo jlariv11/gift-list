@@ -95,36 +95,39 @@ export default function AccountPage() {
 
     return (
         <div>
-            <div className={`m-2 px-4 sm:px-6 md:px-8 flex flex-col items-center transition-all duration-100 ${deleteListModal || addListModal ? "blur-xs" : ""}`}>
-                <div className={"w-full max-w-4xl space-y-1.5"}>
+            <div className={`m-2 px-4 flex flex-col items-center transition-all duration-100 ${deleteListModal || addListModal ? "blur-xs" : ""}`}>
+                <div className={"w-full space-y-1.5"}>
                     <div className={"space-y-5 b-4 border-4 rounded-md border-gray-400 p-4 bg-gray-300"}>
                         <div className={"flex justify-between"}>
-                            <h1 className={"text-4xl"}>Welcome, {session?.user.name}</h1>
+                            <div>
+                                <h1 className={"text-4xl"}>Welcome,</h1>
+                                <h1 className={"text-4xl"}>{session?.user.name}</h1>
+                            </div>
                             <ListButton buttonText={"Log Out"} onClick={() => handleLogout()}></ListButton>
                         </div>
                         <h1 className={"text-3xl"}>User Info</h1>
                         <div className={"b-4 border-4 rounded-md border-gray-400 p-4 bg-gray-300"}>
                             <h2><strong>Email:</strong> {session?.user.email}</h2>
-
                         </div>
                         <h1 className={"text-3xl"}>Lists</h1>
                         <div className={"b-4 border-4 rounded-md border-gray-400 p-4 bg-gray-300 h-108 overflow-y-auto space-y-2"}>
                             {lists.map((list, index) => (
-                                <div className={"flex justify-between b-4 border-4 rounded-md border-gray-400 p-4 bg-gray-300"} key={index}>
+                                <div className={"b-4 border-4 rounded-md border-gray-400 p-4 bg-gray-300"} key={index}>
                                     <div>
                                         <h2 className={"text-2xl"}><strong>{list.listName}</strong></h2>
-                                        <h2><strong>Owner Link:</strong> <a onClick={() => addToClipboard(linkFromID(list.ownerID, true))} className={"cursor-pointer text-gray-800 hover:text-orange-400"}>{linkFromID(list.ownerID, true)}</a></h2>
-                                        <h2><strong>Share Link:</strong> <a onClick={() => addToClipboard(linkFromID(list.shareID, false))} className={"cursor-pointer text-gray-800 hover:text-orange-400"}>{linkFromID(list.shareID, false)}</a></h2>
+                                        <h2><strong>Owner Link:</strong> <a onClick={() => addToClipboard(linkFromID(list.ownerID, true))} className={"cursor-pointer text-gray-800 hover:text-orange-400 break-all"}>{linkFromID(list.ownerID, true)}</a></h2>
+                                        <h2><strong>Share Link:</strong> <a onClick={() => addToClipboard(linkFromID(list.shareID, false))} className={"cursor-pointer text-gray-800 hover:text-orange-400 break-all"}>{linkFromID(list.shareID, false)}</a></h2>
+                                        <div className={"space-x-1.5"}>
+                                            <ListButton onClick={() => router.push(linkFromID(list.ownerID, true))} buttonText={"Go To List"}></ListButton>
+                                            <ListButton onClick={() => handleDeleteList(list.ownerID)} buttonText={"Delete List"}></ListButton>
+                                        </div>
                                     </div>
-                                    <ListButton onClick={() => router.push(linkFromID(list.ownerID, true))} buttonText={"Go To List"}></ListButton>
-                                    <ListButton onClick={() => handleDeleteList(list.ownerID)} buttonIcon={<FaTrashCan />}></ListButton>
                                 </div>
                             ))}
                         </div>
                         <ListButton onClick={() => handleAddList()} buttonText={"Add List"}></ListButton>
                     </div>
                 </div>
-
             </div>
             <div id={"modal"}></div>
             {addListModal && <Modal modalTitle={"Add List"} modalDivID={"modal"} showModalToggle={setAddListModal} modalBody={<ListModal session={session} setAddListModal={setAddListModal} updateLists={updateLists}/>}></Modal>}

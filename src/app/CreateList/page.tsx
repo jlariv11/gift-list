@@ -19,6 +19,19 @@ export interface ListProps {
     items: Item[];
 }
 
+export function itemsAsGroupedArray(items: Item[]) {
+    const groupedItems: Item[][] = [];
+    for(const item of items){
+        if(item.alternateForId){
+            console.log("skipping", item.itemName, item.alternateForId)
+            continue;
+        }
+        const alternates = items.filter(i => i.alternateForId === item.itemID);
+        groupedItems.push([item, ...alternates]);
+    }
+    return groupedItems;
+}
+
 export default function CreateList() {
     const [listName, setListName] = useState('');
     const [items, setItems] = useState<Item[]>([]);
@@ -158,35 +171,21 @@ export default function CreateList() {
         setListName("");
     }
 
-
-    function itemsAsGroupedArray(){
-        const groupedItems: Item[][] = [];
-        for(const item of items){
-            if(item.alternateForId){
-                console.log("skipping", item.itemName, item.alternateForId)
-                continue;
-            }
-            const alternates = items.filter(i => i.alternateForId === item.itemID);
-            groupedItems.push([item, ...alternates]);
-        }
-        return groupedItems;
-    }
-
     return (
         <div>
-            <div className={`m-2 px-4 sm:px-6 md:px-8 flex flex-col items-center transition-all duration-100 ${showAddItem || showEditItem || showDeleteModal ? "blur-xs" : ""}`}>
+            <div className={`m-1 px-4 flex flex-col items-center transition-all duration-100 ${showAddItem || showEditItem || showDeleteModal ? "blur-xs" : ""}`}>
                 <div className={"w-full max-w-4xl space-y-1.5"}>
                     <h1 className={"text-4xl"}>{newList ? "Create New" : "Edit"} List</h1>
                     <div className={"pb-4 border-4 rounded-md border-gray-400 p-4 bg-gray-300"}>
                         <ListInput label={'List Name: '} type={'text'} value={listName} onChange={(e) => setListName(e.target.value)} onBlur={() => {listChanged(); toggleChangesSaved();}}/>
                     </div>
                     <div className={"h-108 overflow-y-auto border-4 rounded-md border-gray-400 p-4 bg-gray-300"}>
-                        {itemsAsGroupedArray().map((items, index) => <ItemElement key={index} items={items} editItem={fetchEditItem} deleteItem={deleteItem} />)}
+                        {itemsAsGroupedArray(items).map((items, index) => <ItemElement key={index} items={items} editItem={fetchEditItem} deleteItem={deleteItem} />)}
                     </div>
                     <div className={"bg-gray-300 border-gray-400 border-4 rounded-md shadow-sm p-4"}>
-                        <h2><strong>Edit Link:</strong> <a onClick={() => addToClipboard(linkFromID(true))} className={"cursor-pointer text-gray-800 hover:text-orange-400 truncate"}>{linkFromID(true)}</a></h2>
+                        <h2><strong>Edit Link:</strong> <a onClick={() => addToClipboard(linkFromID(true))} className={"cursor-pointer text-gray-800 hover:text-orange-400"}>{linkFromID(true)}</a></h2>
                         <div>
-                            <h2><strong>Share Link:</strong> <a onClick={() => addToClipboard(linkFromID(false))} className={"cursor-pointer text-gray-800 hover:text-orange-400 truncate"}>{linkFromID(false)}</a> <span hidden={!!shareID}> <ListButton onClick={() => handleGetShareID()} buttonText={"Create Sharable Link"} /></span> </h2>
+                            <h2><strong>Share Link:</strong> <a onClick={() => addToClipboard(linkFromID(false))} className={"cursor-pointer text-gray-800 hover:text-orange-400"}>{linkFromID(false)}</a> <span hidden={!!shareID}> <ListButton onClick={() => handleGetShareID()} buttonText={"Create Sharable Link"} /></span> </h2>
                         </div>
                     </div>
                     <div className={"bg-gray-300 border-gray-400 border-4 rounded-md shadow-sm p-4"}>

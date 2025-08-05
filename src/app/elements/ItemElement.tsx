@@ -1,9 +1,10 @@
 import {Item} from "../database/SaveList";
-import {FaPencil, FaTrashCan} from "react-icons/fa6";
+import {FaPencil, FaQuestion, FaTrashCan} from "react-icons/fa6";
 import ListButton from "./ListButton";
 import ListInput from "./ListInput";
 import {useState} from "react";
 import {FaArrowLeft, FaArrowRight} from "react-icons/fa";
+import Image from "next/image";
 
 export interface ItemElementProps {
     items: Item[];
@@ -31,40 +32,102 @@ const ItemElement = ({items, editItem, deleteItem, updatePurchaseCount}: ItemEle
     }
 
     return (
-        <>
-            <div className={"bg-gray-400 rounded-lg p-2 my-2"}>
-                <div className={"flex justify-between items-center"}>
-                <span className={"text-gray-800"}>
-                    <div className={"text-wrap w-50"}>{currentItem.itemName}</div>
+        <div className="p-2 bg-gray-400 rounded-lg p-2 my-2">
+            <div className="flex justify-between items-start flex-wrap gap-4">
+                {/* Left content */}
+                <div className="text-gray-800 w-full sm:w-1/2 flex flex-col gap-2">
+                    <div className="font-semibold text-lg break-words">{currentItem.itemName}</div>
+
                     {editItem ? (
                         <div>Quantity: {currentItem.itemQuantity}</div>
-                    ):
-                        (
-                            <div>
-                                <h2>Purchased:</h2>
-                                <div className={"flex"}>
-                                    <ListInput className={"text-center w-10"} label={""} type={"number"} value={localQuantityPurchased} min={currentItem.itemQuantityPurchased} max={item.itemQuantity} onChange={(e) => {setLocalQuantityPurchased(clamp(Number(e.target.value), currentItem.itemQuantityPurchased || 0, currentItem.itemQuantity)); updatePurchaseCount?.(currentItem.itemID, clamp(Number(e.target.value), currentItem.itemQuantityPurchased || 0, currentItem.itemQuantity))}}/>
-                                    <h2 className={"px-1 text-xl"}>of {currentItem.itemQuantity}</h2>
-                                </div>
+                    ) : (
+                        <div>
+                            <h2>Purchased:</h2>
+                            <div className="flex items-center gap-2">
+                                <ListInput
+                                    className="text-center w-14"
+                                    label=""
+                                    type="number"
+                                    value={localQuantityPurchased}
+                                    min={currentItem.itemQuantityPurchased}
+                                    max={currentItem.itemQuantity}
+                                    onChange={(e) => {
+                                        const val = clamp(
+                                            Number(e.target.value),
+                                            currentItem.itemQuantityPurchased || 0,
+                                            currentItem.itemQuantity
+                                        );
+                                        setLocalQuantityPurchased(val);
+                                        updatePurchaseCount?.(currentItem.itemID, val);
+                                    }}
+                                />
+                                <span className="text-xl">of {currentItem.itemQuantity}</span>
                             </div>
-                        )}
-                    <h2><a className={"text-orange-600 hover:text-orange-500"} target={"_blank"} rel="noopener noreferrer" href={currentItem.itemLink}>Link to Purchase</a></h2>
-                    <h2>Description:</h2>
-                    <p className={"text-wrap w-50"}>{currentItem.itemDescription}</p>
-                </span>
-                    <img className={"w-[100px] h-auto object-contain"} width={100} src={currentItem.itemImageURL || null} alt={"Image of Item"}></img>
+                        </div>
+                    )}
+
+                    <div>
+                        <h2>
+                            <a
+                                className="text-orange-600 hover:text-orange-500"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                href={currentItem.itemLink}
+                            >
+                                Link to Purchase
+                            </a>
+                        </h2>
+                    </div>
+
+                    <div>
+                        <h2>Description:</h2>
+                        <p className="whitespace-normal break-words max-h-32 overflow-y-auto">
+                            {currentItem.itemDescription}
+                        </p>
+                    </div>
+                </div>
+
+                {/* Right content */}
+                <div className="flex flex-col items-center gap-2 w-full sm:w-auto">
+                    {currentItem.itemImageURL ? (
+                        <div className="w-full max-w-[300px]">
+                            <Image
+                                src={currentItem.itemImageURL}
+                                alt="Image of Item"
+                                width={300}
+                                height={300}
+                                className="object-contain w-full h-auto"
+                            />
+                        </div>
+                    ) : (
+                        <FaQuestion title={"No Image Provided"} className="text-4xl text-gray-600" />
+                    )}
+
                     {editItem && (
-                        <div className={"space-x-1.5"}>
-                            <ListButton onClick={() => {if(items[0].itemID)editItem?.(items[0].itemID)}} buttonIcon={<FaPencil />}/>
-                            <ListButton onClick={() => {if(items[0].itemID)deleteItem?.(items[0].itemID)}} buttonIcon={<FaTrashCan />}/>
-                            <ListButton onClick={() => switchItem(-1)} buttonIcon={<FaArrowLeft />}/>
-                            <ListButton onClick={() => switchItem(1)} buttonIcon={<FaArrowRight />}/>
+                        <div className="flex gap-2">
+                            <ListButton
+                                onClick={() => {
+                                    const id = items[0].itemID;
+                                    if (id) editItem?.(id);
+                                }}
+                                buttonIcon={<FaPencil />}
+                            />
+                            <ListButton
+                                onClick={() => {
+                                    const id = items[0].itemID;
+                                    if (id) deleteItem?.(id);
+                                }}
+                                buttonIcon={<FaTrashCan />}
+                            />
+                            <div className={"space-x-1.5"} hidden={items.length === 1}>
+                                <ListButton onClick={() => switchItem(-1)} buttonIcon={<FaArrowLeft />} />
+                                <ListButton onClick={() => switchItem(1)} buttonIcon={<FaArrowRight />} />
+                            </div>
                         </div>
                     )}
                 </div>
             </div>
-
-        </>
+        </div>
     )
 }
 

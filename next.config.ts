@@ -16,6 +16,10 @@ const nextConfig: NextConfig = {
                 protocol: 'https',
                 hostname: '**.auth0.com', // If your Auth0 domain serves profile images
             },
+            {
+                protocol: 'https',
+                hostname: '**', // allow all https domains
+            },
         ],
     },
 };
