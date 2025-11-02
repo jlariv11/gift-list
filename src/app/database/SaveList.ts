@@ -38,7 +38,7 @@ export async function saveList(listProps: ListProps) {
 }
 
 export async function saveSharedList(listProps: ListProps) {
-    await axios.post(ROUTES.SAVE_LIST, listProps);
+    await axios.post(ROUTES.SAVE_PURCHASES, listProps);
 }
 
 export async function deleteItems(itemIDs: number[]) {
