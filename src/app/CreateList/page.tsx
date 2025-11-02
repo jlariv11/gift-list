@@ -30,6 +30,7 @@ export default function CreateList() {
     const [ownerID, setOwnerID] = useState("");
     const [shareID, setShareID] = useState<string | undefined>(undefined);
     const [newList, setNewList] = useState(false);
+    const [copiedEditLink, setCopiedEditLink] = useState<boolean>(true);
 
     const [changesSaved, setChangesSaved] = useState(false);
 
@@ -61,6 +62,7 @@ export default function CreateList() {
             })
         }else{
             setNewList(true);
+            setCopiedEditLink(false);
         }
     }, []);
 
@@ -146,6 +148,7 @@ export default function CreateList() {
         setShareID("");
         setItems([]);
         setNewList(true);
+        setCopiedEditLink(false);
         setListName("");
     }
 
@@ -154,14 +157,15 @@ export default function CreateList() {
             <div className={`m-2 px-4 sm:px-6 md:px-8 flex flex-col items-center transition-all duration-100 ${showAddItem || showEditItem || showDeleteModal ? "blur-xs" : ""}`}>
                 <div className={"w-full max-w-4xl space-y-1.5"}>
                     <h1 className={"text-4xl"}>{newList ? "Create New" : "Edit"} List</h1>
-                    <div className={"pb-4 border-4 rounded-md border-gray-400 p-4 bg-gray-300"}>
+                    <div className={"flex justify-between pb-4 border-4 rounded-md border-gray-400 p-4 bg-gray-300"}>
                         <ListInput label={'List Name: '} type={'text'} value={listName} onChange={(e) => setListName(e.target.value)} onBlur={() => {listChanged(); toggleChangesSaved();}}/>
+                        <div hidden={copiedEditLink || !ownerID} className={"pb-4 border-4 rounded-md border-black font-bold p-4 bg-red-600 text-white"}>Please copy the edit link at the bottom to be able to return and edit your list.</div>
                     </div>
                     <div className={"h-108 overflow-y-auto border-4 rounded-md border-gray-400 p-4 bg-gray-300"}>
                         {items.map((item, index) => <ItemElement key={index} item={item} editItem={fetchEditItem} deleteItem={deleteItem} />)}
                     </div>
                     <div className={"bg-gray-300 border-gray-400 border-4 rounded-md shadow-sm p-4"}>
-                        <h2><strong>Edit Link:</strong> <a onClick={() => addToClipboard(linkFromID(true))} className={"cursor-pointer text-gray-800 hover:text-orange-400 truncate"}>{linkFromID(true)}</a></h2>
+                        <h2><strong>Edit Link:</strong> <a onClick={() => {addToClipboard(linkFromID(true)); setCopiedEditLink(true)}} className={`cursor-pointer truncate hover:text-orange-400 ${copiedEditLink ? "text-gray-800" : "text-red-600"}`}>{linkFromID(true)}</a></h2>
                         <div>
                             <h2><strong>Share Link:</strong> <a onClick={() => addToClipboard(linkFromID(false))} className={"cursor-pointer text-gray-800 hover:text-orange-400 truncate"}>{linkFromID(false)}</a> <span hidden={!!shareID}> <ListButton onClick={() => handleGetShareID()} buttonText={"Create Sharable Link"} /></span> </h2>
                         </div>
