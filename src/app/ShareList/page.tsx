@@ -5,7 +5,6 @@ import ListButton from "../elements/ListButton";
 import {loadViewList} from "../database/LoadList";
 import ItemElement from "../elements/ItemElement";
 import {useSearchParams} from "next/navigation";
-import ReviewPurchases from "@/app/components/ReviewPurchases";
 import WarningModal from "@/app/components/WarningModal";
 import Modal from "@/app/components/Modal";
 
