@@ -53,7 +53,6 @@ export default function ShareList() {
         }
     }
 
-    //TODO: fix visual bug when an item is fully purchased another item's purchase count will be changed visually
     function saveItems(){
         purchasedItems.forEach((localItem) => {
             const item = items.find(i => i.itemID === localItem.itemID);
@@ -73,13 +72,13 @@ export default function ShareList() {
                     <h1 className={"text-4xl"}>View {listName}</h1>
                     <div className={"flex gap-2"}>
                         <div className={"w-2/3 h-150 overflow-y-auto border-4 rounded-md border-gray-400 p-4 bg-gray-300"}>
-                            {items.filter(i => i.itemQuantity !== i.itemQuantityPurchased).map((item, index) => <ItemElement key={index} item={item} updatePurchaseCount={updatePurchaseCount}/>)}
+                            {items.filter(i => i.itemQuantity !== i.itemQuantityPurchased).map((item) => <ItemElement key={item.itemID} item={item} updatePurchaseCount={updatePurchaseCount}/>)}
                         </div>
                         <div className="w-1/3 h-150 border-4 rounded-md border-gray-400 ml-2 p-4 bg-gray-300 flex flex-col justify-between">
                             <div>
                                 <h1 className={"text-xl font-bold"}>Purchases</h1>
-                                {purchasedItems.map((item, index) => (
-                                    <div key={index} className={"pb-2"}>
+                                {purchasedItems.map((item) => (
+                                    <div key={item.itemID} className={"pb-2"}>
                                         <h1 className={"text-lg"}>{item.itemName} x {item.itemQuantityPurchased}</h1>
                                         <hr />
                                     </div>
