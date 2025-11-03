@@ -2,7 +2,7 @@
 
 import {useRouter, useSearchParams} from "next/navigation";
 import {useEffect} from "react";
-import CreateList from "@/app/CreateList/page";
+import LandingPage from "@/app/LandingPage/page";
 
 export default function Home() {
 
@@ -20,6 +20,6 @@ export default function Home() {
   }, [searchParams])
 
   return(
-      <CreateList />
+      <LandingPage />
   )
 }
