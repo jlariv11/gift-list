@@ -4,6 +4,7 @@ import ListInput from "../elements/ListInput";
 import ListButton from "../elements/ListButton";
 import {IoMdCloseCircleOutline} from "react-icons/io";
 import ListTextarea from "@/app/elements/ListTextarea";
+import {FaQuestionCircle} from "react-icons/fa";
 
 type CreateItemProps = {
     setShowAddItem: (showAddItem: boolean) => void
@@ -53,17 +54,23 @@ export default function CreateItem({setShowAddItem, addItem, itemProps}: CreateI
                         <IoMdCloseCircleOutline onClick={() => setShowAddItem(false)} size={32} className={"text-xl text-orange-400 hover:text-orange-300 cursor-pointer"} />
                     </div>
                     <div className={"items-center"}>
-                        <div>
+                        <div className={"flex"}>
                             <ListInput label={'Item Name:'} type={'text'} value={itemName} onChange={(e) => setItemName(e.target.value)}></ListInput>
+                            <DescriptiveQuestion description={"The name of your item"}></DescriptiveQuestion>
                         </div>
-                        <div>
+                        <div className={"flex"}>
                             <ListInput label={'Item Quantity:'} type={'number'} min={1} value={itemQuantity} onChange={(e) => setItemQuantity(Number(e.target.value))}></ListInput>
+                            <DescriptiveQuestion description={"The number of this item you want"}></DescriptiveQuestion>
                         </div>
-                        <div>
+                        <div className={"flex"}>
                             <ListInput label={'Item Link:'} type={'text'} value={itemLink} onChange={(e) => setItemLink(e.target.value)}></ListInput>
+                            <DescriptiveQuestion description={"The link to where someone can purchase this item"}></DescriptiveQuestion>
                         </div>
-                        <div>
+                        <div className={"flex"}>
                             <ListInput label={'Item Image URL:'} type={'text'} value={itemImageURL ? itemImageURL : ""} onChange={(e) => setItemImageURL(e.target.value)}></ListInput>
+                            <DescriptiveQuestion description={"A link to an image that represents your item"}></DescriptiveQuestion>
+                        </div>
+                        <div className={"flex"}>
                             <ListInput label={'Upload Image from Files:'} type={'file'} accept={"image/*"} onChange={(e) => {
                                 const formData = new FormData();
                                 const file = e.target.files?.[0];
@@ -72,9 +79,11 @@ export default function CreateItem({setShowAddItem, addItem, itemProps}: CreateI
                                     setItemImageFile(formData);
                                 }
                             }}></ListInput>
+                            <DescriptiveQuestion description={"Upload an image to represent your item"}></DescriptiveQuestion>
                         </div>
-                        <div>
-                            <ListTextarea label={'Item Description:'} cols={50} rows={5} value={itemDescription} onChange={(e) => setItemDescription(e.target.value)}></ListTextarea>
+                        <div className={"flex"}>
+                            <ListTextarea label={'Item Description:'} cols={40} rows={5} value={itemDescription} onChange={(e) => setItemDescription(e.target.value)}></ListTextarea>
+                            <DescriptiveQuestion description={"A description or extra details someone might need to know about purchasing this item"}></DescriptiveQuestion>
                         </div>
                         <ListButton buttonText={"Save"} onClick={() => handleAddItem()}></ListButton>
                     </div>
@@ -82,4 +91,19 @@ export default function CreateItem({setShowAddItem, addItem, itemProps}: CreateI
             </div>
         </div>
     );
+}
+
+type Description = {
+    description: string;
+}
+
+const DescriptiveQuestion = ({description}: Description) => {
+    return (
+        <>
+            <div className="relative group inline-block">
+                <FaQuestionCircle />
+                <span className="absolute bottom-full mb-2 hidden group-hover:block w-max bg-gray-800 text-white text-sm rounded px-2 py-1">{description}</span>
+            </div>
+        </>
+    )
 }
