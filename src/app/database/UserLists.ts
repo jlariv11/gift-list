@@ -5,6 +5,14 @@ export async function getUserListInfo(auth0Owner: string){
     return (await axios.get(ROUTES.GET_USER_LISTS, {params: {auth0Owner: auth0Owner}})).data;
 }
 
+export async function getUserSharedListInfo(auth0Owner: string){
+    return (await axios.get(ROUTES.GET_USER_SHARE_LISTS, {params: {auth0Owner: auth0Owner}})).data;
+}
+
 export async function addUserToList(link: string, auth0Owner: string){
     return (await axios.post(ROUTES.SET_USER_LIST, {data: {auth0Owner: auth0Owner, ownerID: link.split("owner=")[1]}})).data;
+}
+
+export async function addUserToSharedList(link: string, auth0Owner: string){
+    return (await axios.post(ROUTES.SET_USER_SHARE_LIST, {data: {auth0Owner: auth0Owner, shareID: link.split("share=")[1]}})).data;
 }
