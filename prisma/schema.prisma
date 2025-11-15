@@ -20,9 +20,19 @@ model Item {
 }
 
 model List {
-  ownerID    String  @id
-  shareID    String? @unique
+  ownerID    String       @id
+  shareID    String?      @unique
   auth0Owner String?
-  listName   String  @default("List")
+  listName   String       @default("List")
   Item       Item[]
+  SharedList SharedList[]
+}
+
+model SharedList {
+  id              Int    @id @default(autoincrement())
+  accountSharedTo String
+  shareID         String
+  SharedList      List   @relation(fields: [shareID], references: [shareID])
+
+  @@unique([accountSharedTo, shareID])
 }

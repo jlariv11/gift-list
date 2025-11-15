@@ -1,5 +1,5 @@
 "use client"
-import {useEffect, useState} from "react";
+import {useContext, useEffect, useState} from "react";
 import {Item, saveSharedList} from "../database/SaveList";
 import ListButton from "../elements/ListButton";
 import {loadViewList} from "../database/LoadList";
@@ -7,6 +7,7 @@ import ItemElement from "../elements/ItemElement";
 import {useSearchParams} from "next/navigation";
 import WarningModal from "@/app/components/WarningModal";
 import Modal from "@/app/components/Modal";
+import {SessionContext} from "@/app/SessionContext";
 
 export interface SimpleItem {
     itemID: number | undefined;
@@ -21,9 +22,10 @@ export default function ShareList() {
     const [shareID, setShareID] = useState("");
     const [showModal, setShowModal] = useState(false);
     const searchParams = useSearchParams();
+    const session = useContext(SessionContext);
 
     async function fetchList(shareID: string) {
-        const listData = await loadViewList(shareID);
+        const listData = await loadViewList(shareID, session ? session.user.email : undefined);
         setListName(listData.listName);
         setItems(listData.items);
         setShareID(listData.shareID);
