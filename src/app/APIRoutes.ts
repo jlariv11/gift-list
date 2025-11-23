@@ -4,6 +4,7 @@ export const ROUTES = {
     GET_USER_SHARE_LISTS: "/api/list/usersharelists",
     SET_USER_SHARE_LIST: "/api/list/setusersharelist",
     SET_USER_LIST: "/api/list/setuserlist",
+    REMOVE_SHARED_LIST: "/api/list/removesharelist",
     GET_SHAREID: "/api/list/shareid",
     SAVE_LIST: "/api/list/save",
     SAVE_PURCHASES: "/api/list/savepurchases",

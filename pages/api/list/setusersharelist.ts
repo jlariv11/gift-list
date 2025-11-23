@@ -3,20 +3,18 @@ import prismaClient from "../../../lib/prisma"
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
     try{
-        // console.log(req.body.data.shareID);
-        // const listOwner = await prismaClient.list.findFirst({
-        //     where: {
-        //         shareID: req.body.data.shareID,
-        //     },
-        //     select: {
-        //         auth0Owner: true
-        //     }
-        // })
-        // console.log(listOwner)
-        // if(listOwner === req.body.data.shareVisitor){
-        //     res.status(304).json("Visitor is Owner")
-        //     return;
-        // }
+        const list = await prismaClient.list.findFirst({
+            where: {
+                shareID: req.body.data.shareID,
+            },
+            select: {
+                auth0Owner: true
+            }
+        })
+        if(list && list.auth0Owner === req.body.data.shareVisitor){
+            res.status(200).json("Visitor is Owner")
+            return;
+        }
         const data = await prismaClient.sharedList.upsert({
             where: {
                 accountSharedTo_shareID: {
