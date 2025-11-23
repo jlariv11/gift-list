@@ -165,9 +165,10 @@ export default function CreateList() {
                         {items.map((item, index) => <ItemElement key={index} item={item} editItem={fetchEditItem} deleteItem={deleteItem} />)}
                     </div>
                     <div className={"bg-gray-300 border-gray-400 border-4 rounded-md shadow-sm p-4"}>
-                        <h2><strong>Edit Link:</strong> <a onClick={() => {addToClipboard(linkFromID(true)); setCopiedEditLink(true)}} className={`cursor-pointer truncate hover:text-orange-400 ${copiedEditLink ? "text-gray-800" : "text-red-600"}`}>{linkFromID(true)}</a></h2>
+                        <h1 className={"text-3xl"}>List Links</h1>
+                        <h2><a onClick={() => {addToClipboard(linkFromID(true)); setCopiedEditLink(true)}} className={`cursor-pointer truncate hover:text-orange-400 ${copiedEditLink ? "text-gray-800" : "text-red-600"}`}><strong>Copy Edit Link</strong></a></h2>
                         <div>
-                            <h2><strong>Share Link:</strong> <a onClick={() => addToClipboard(linkFromID(false))} className={"cursor-pointer text-gray-800 hover:text-orange-400 truncate"}>{linkFromID(false)}</a> <span hidden={!!shareID}> <ListButton onClick={() => handleGetShareID()} buttonText={"Create Sharable Link"} /></span> </h2>
+                            <h2><a onClick={() => addToClipboard(linkFromID(false))} className={"cursor-pointer text-gray-800 hover:text-orange-400 truncate"}><strong>Copy Share Link</strong></a> <span hidden={!!shareID}> <ListButton onClick={() => handleGetShareID()} buttonText={"Create Sharable Link"} /></span> </h2>
                         </div>
                     </div>
                     <div className={"bg-gray-300 border-gray-400 border-4 rounded-md shadow-sm p-4"}>
