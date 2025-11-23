@@ -48,3 +48,7 @@ export async function deleteItems(itemIDs: number[]) {
 export async function deleteList(ownerID: string) {
     await axios.delete(ROUTES.DELETE_LIST, {data: {ownerID}})
 }
+
+export async function removeSharedList(shareID: string, auth0Owner:string) {
+    await axios.delete(ROUTES.REMOVE_SHARED_LIST, {data: {shareID, auth0Owner}})
+}

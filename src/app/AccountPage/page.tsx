@@ -4,10 +4,10 @@ import {useContext, useEffect, useState} from "react";
 import ListButton from "@/app/elements/ListButton";
 import Modal from "@/app/components/Modal";
 import ListInput from "@/app/elements/ListInput";
-import {addUserToList, getUserListInfo, getUserSharedListInfo} from "@/app/database/UserLists";
+import {addUserToList, addUserToSharedList, getUserListInfo, getUserSharedListInfo} from "@/app/database/UserLists";
 import {SessionData} from "@auth0/nextjs-auth0/types";
 import {FaTrashCan} from "react-icons/fa6";
-import {deleteList} from "@/app/database/SaveList";
+import {deleteList, removeSharedList} from "@/app/database/SaveList";
 import WarningModal from "@/app/components/WarningModal";
 import {useRouter} from "next/navigation";
 
@@ -34,16 +34,23 @@ const ListModal = (props: ListModalProps) => {
     const [link, setLink] = useState("");
     function submit(){
         if(props.session && props.session.user.email) {
-            addUserToList(link, props.session.user.email).then(() => {
-                props.updateLists();
-                props.setAddListModal(false);
-            })
+            if(link.includes("owner")) {
+                addUserToList(link, props.session.user.email).then(() => {
+                    props.updateLists();
+                    props.setAddListModal(false);
+                })
+            }else if(link.includes("share")) {
+                addUserToSharedList(link, props.session.user.email).then(() => {
+                    props.updateLists();
+                    props.setAddListModal(false);
+                })
+            }
         }
     }
     return (
         <div>
             <div className={"w-100 space-y-2 b-4 border-4 rounded-md border-gray-400 p-4 bg-gray-300"}>
-                <ListInput type={"text"} value={link} label={"Edit Link:"} onChange={(e) => setLink(e.target.value)}></ListInput>
+                <ListInput type={"text"} value={link} label={"List Link:"} onChange={(e) => setLink(e.target.value)}></ListInput>
                 <ListButton buttonText={"Submit"} onClick={() => submit()}></ListButton>
             </div>
         </div>
@@ -57,7 +64,7 @@ export default function AccountPage() {
     const [sharedLists, setSharedLists] = useState<SharedListProps[]>([]);
     const [addListModal, setAddListModal] = useState(false);
     const [deleteListModal, setDeleteListModal] = useState(false);
-    const [listToDelete, setListToDelete] = useState<string | null>(null);
+    const [listToDelete, setListToDelete] = useState<{ id: string, shared:boolean }>();
     const router = useRouter();
 
     function linkFromID(id: string, edit: boolean): string {
@@ -79,7 +86,6 @@ export default function AccountPage() {
                 setLists(info);
             })
             getUserSharedListInfo(session.user.email).then((info) => {
-                console.log(info);
                 setSharedLists(info);
             })
         }
@@ -93,8 +99,8 @@ export default function AccountPage() {
         window.location.href = "auth/logout"
     }
 
-    function handleDeleteList(ownerID: string){
-        setListToDelete(ownerID);
+    function handleDeleteList(ownerID: string, shared: boolean=false){
+        setListToDelete({id:ownerID, shared});
         setDeleteListModal(true);
     }
 
@@ -102,8 +108,15 @@ export default function AccountPage() {
         if(!listToDelete){
             return;
         }
-        deleteList(listToDelete);
-        setLists(lists.filter(list => list.ownerID !== listToDelete));
+        if(listToDelete.shared){
+            if(session && session.user.email) {
+                removeSharedList(listToDelete.id, session.user.email);
+                setSharedLists(sharedLists.filter(list => list.shareID !== listToDelete.id));
+            }
+        }else{
+            deleteList(listToDelete.id);
+            setLists(lists.filter(list => list.ownerID !== listToDelete.id));
+        }
     }
 
     return (
@@ -120,36 +133,32 @@ export default function AccountPage() {
                             <h2><strong>Email:</strong> {session?.user.email}</h2>
 
                         </div>
-                        <div className={"flex justify-between"}>
-                            <div>
-                                <h1 className={"text-3xl"}>Your Lists</h1>
-                                <div className={"b-4 border-4 rounded-md border-gray-400 p-4 bg-gray-300 h-108 overflow-y-auto space-y-2"}>
-                                    {lists.map((list) => (
-                                        <div className={"flex justify-between b-4 border-4 rounded-md border-gray-400 p-4 bg-gray-300"} key={list.ownerID}>
-                                            <div>
-                                                <h2 className={"text-2xl"}><strong>{list.listName}</strong></h2>
-                                                <h2><a onClick={() => addToClipboard(linkFromID(list.ownerID, true))} className={"cursor-pointer text-gray-800 hover:text-orange-400"}><strong>Copy Edit Link</strong></a></h2>
-                                                <h2><a onClick={() => addToClipboard(linkFromID(list.shareID, false))} className={"cursor-pointer text-gray-800 hover:text-orange-400"}><strong>Copy Share Link</strong></a></h2>
-                                            </div>
-                                            <ListButton onClick={() => router.push(linkFromID(list.ownerID, true))} buttonText={"Go To List"}></ListButton>
-                                            <ListButton onClick={() => handleDeleteList(list.ownerID)} buttonIcon={<FaTrashCan />}></ListButton>
-                                        </div>
-                                    ))}
+                        <div className="flex gap-4">
+                            {/* Left Panel */}
+                            <div className="flex-1 min-h-0">
+                                <h1 className="text-3xl">Your Lists</h1>
+                                <div className="b-4 border-4 rounded-md border-gray-400 p-4 bg-gray-300 h-108 overflow-y-auto space-y-2">
+                                    {lists.length > 0 ? (
+                                        lists.map((list) => (
+                                            <div className={"flex justify-between b-4 border-4 rounded-md border-gray-400 p-4 bg-gray-300"} key={list.ownerID}> <div> <h2 className={"text-2xl"}><strong>{list.listName}</strong></h2> <h2><a onClick={() => addToClipboard(linkFromID(list.ownerID, true))} className={"cursor-pointer text-gray-800 hover:text-orange-400"}><strong>Copy Edit Link</strong></a></h2> <h2><a onClick={() => addToClipboard(linkFromID(list.shareID, false))} className={"cursor-pointer text-gray-800 hover:text-orange-400"}><strong>Copy Share Link</strong></a></h2> </div> <ListButton onClick={() => router.push(linkFromID(list.ownerID, true))} buttonText={"Go To List"}></ListButton> <ListButton onClick={() => handleDeleteList(list.ownerID)} buttonIcon={<FaTrashCan />}></ListButton> </div>
+                                        ))
+                                    ) : (
+                                        <p className="text-gray-600 italic">No lists yet.</p>
+                                    )}
                                 </div>
                             </div>
 
-                            <div>
-                                <h1 className={"text-3xl"}>Lists shared with you</h1>
-                                <div className={"b-4 border-4 rounded-md border-gray-400 p-4 bg-gray-300 h-108 overflow-y-auto space-y-2"}>
-                                    {sharedLists.map((list) => (
-                                        <div className={"flex justify-between b-4 border-4 rounded-md border-gray-400 p-4 bg-gray-300"} key={list.shareID}>
-                                            <div>
-                                                <h2 className={"text-2xl"}><strong>{list.sharedListName}</strong></h2>
-                                            </div>
-                                            <ListButton onClick={() => router.push(linkFromID(list.shareID, false))} buttonText={"Go To List"}></ListButton>
-                                            <ListButton onClick={() => handleDeleteList(list.shareID)} buttonIcon={<FaTrashCan />}></ListButton>
-                                        </div>
-                                    ))}
+                            {/* Right Panel */}
+                            <div className="flex-1 min-h-0">
+                                <h1 className="text-3xl">Lists shared with you</h1>
+                                <div className="b-4 border-4 rounded-md border-gray-400 p-4 bg-gray-300 h-108 overflow-y-auto space-y-2">
+                                    {sharedLists.length > 0 ? (
+                                        sharedLists.map((list) => (
+                                            <div className={"flex justify-between b-4 border-4 rounded-md border-gray-400 p-4 bg-gray-300"} key={list.shareID}> <div> <h2 className={"text-2xl"}><strong>{list.sharedListName}</strong></h2> <h2><a onClick={() => addToClipboard(linkFromID(list.shareID, false))} className={"cursor-pointer text-gray-800 hover:text-orange-400"}><strong>Copy Share Link</strong></a></h2> </div> <ListButton onClick={() => router.push(linkFromID(list.shareID, false))} buttonText={"Go To List"}></ListButton> <ListButton onClick={() => handleDeleteList(list.shareID, true)} buttonIcon={<FaTrashCan />}></ListButton> </div>
+                                        ))
+                                    ) : (
+                                        <p className="text-gray-600 italic">No shared lists.</p>
+                                    )}
                                 </div>
                             </div>
                         </div>
