@@ -66,7 +66,7 @@ export default function CreateItem({setShowAddItem, addItem, itemProps}: CreateI
                             <DescriptiveQuestion description={"A link to an image that represents your item"}></DescriptiveQuestion>
                         </div>
                         <div className={"flex my-2"}>
-                            <ListInput label={'Upload Image from Files:'} type={'file'} accept={"image/*"} onChange={(e) => {
+                            <ListInput className={"max-w-75"} label={'Upload Image from Files:'} type={'file'} accept={"image/*"} onChange={(e) => {
                                 const formData = new FormData();
                                 const file = e.target.files?.[0];
                                 if(file){
