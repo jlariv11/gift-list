@@ -27,10 +27,9 @@ const ViewItemElement = ({item, updatePurchaseCount}: ItemElementProps) => {
         <>
             <div className="bg-gray-400 rounded-lg p-4 my-2">
                 <div className="flex gap-4">
-                    {/* Left Column (Image + Description) */}
-                    <div className="flex flex-col items-start min-w-[200px]">
+                    <div className="flex flex-col items-start min-w-[100px] lg:min-w-[200px]">
                         <img
-                            className="border-2 rounded-lg w-[200px] h-[150px] object-cover"
+                            className="border-2 rounded-lg w-[125px] h-[75px] lg:w-[200px] lg:h-[150px] object-cover"
                             src={item.itemImageURL ? item.itemImageURL : undefined}
                             alt="Image of Item"
                         />
@@ -61,10 +60,8 @@ const ViewItemElement = ({item, updatePurchaseCount}: ItemElementProps) => {
 
                     </div>
 
-                    {/* Right Column (Name, Quantity, Buttons) */}
                     <div className="flex flex-col justify-between flex-1">
-                        {/* Top Section */}
-                        <div className="border-2 rounded-lg p-2 h-[150px] overflow-y-scroll text-wrap">
+                        <div className="border-2 rounded-lg p-2 w-[150px] h-[100px] lg:w-[250px] lg:h-[150px]  overflow-y-scroll text-wrap">
                             {item.itemDescription.length === 0 ? "No Description" : item.itemDescription}
                         </div>
                     </div>
@@ -79,10 +76,9 @@ const EditItemElement = ({item, editItem, deleteItem}: ItemElementProps) => {
         <>
             <div className="bg-gray-400 rounded-lg p-4 my-2">
                 <div className="flex gap-4">
-                    {/* Left Column (Image + Description) */}
-                    <div className="flex flex-col items-start min-w-[200px]">
+                    <div className="flex flex-col items-start min-w-[100px] lg:min-w-[200px]">
                         <img
-                            className="border-2 rounded-lg w-[200px] h-[150px] object-cover"
+                            className="border-2 rounded-lg w-[125px] h-[75px] lg:w-[200px] lg:h-[150px] object-cover"
                             src={item.itemImageURL ? item.itemImageURL : undefined}
                             alt="Image of Item"
                         />
@@ -93,14 +89,11 @@ const EditItemElement = ({item, editItem, deleteItem}: ItemElementProps) => {
 
                     </div>
 
-                    {/* Right Column (Name, Quantity, Buttons) */}
                     <div className="flex flex-col justify-between flex-1">
-                        {/* Top Section */}
-                        <div className="border-2 rounded-lg p-2 w-[250px] h-[150px] overflow-y-scroll text-wrap">
+                        <div className="border-2 rounded-lg p-2 w-[150px] h-[100px] lg:w-[250px] lg:h-[150px] overflow-y-scroll text-wrap">
                             {item.itemDescription.length === 0 ? "No Description" : item.itemDescription}
                         </div>
 
-                        {/* Bottom Section (Buttons bottom-right) */}
                         <div className="flex justify-end gap-2 mt-4">
                             <ListButton
                                 onClick={() => {

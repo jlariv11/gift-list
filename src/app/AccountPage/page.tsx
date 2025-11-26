@@ -129,8 +129,8 @@ export default function AccountPage() {
                 className={`m-2 px-4 sm:px-6 md:px-8 flex flex-col items-center transition-all duration-100 ${deleteListModal || addListModal ? "blur-xs" : ""}`}>
                 <div className={"w-full max-w-4xl space-y-1.5"}>
                     <div className={"space-y-5 b-4 border-4 rounded-md border-gray-400 p-4 bg-gray-300"}>
-                        <div className={"flex justify-between"}>
-                            <h1 className={"text-4xl"}>Welcome, {session?.user.name}</h1>
+                        <div className={"flex justify-between items-center"}>
+                            <h1 className={"text-3xl"}>Welcome, {session?.user.name}</h1>
                             <ListButton buttonText={"Log Out"} onClick={() => handleLogout()}></ListButton>
                         </div>
                         <h1 className={"text-3xl"}>User Info</h1>
@@ -138,8 +138,7 @@ export default function AccountPage() {
                             <h2><strong>Email:</strong> {session?.user.email}</h2>
 
                         </div>
-                        <div className="flex gap-4">
-                            {/* Left Panel */}
+                        <div className="lg:flex gap-4">
                             <div className="flex-1 min-h-0">
                                 <h1 className="text-3xl">Your Lists</h1>
                                 <div
@@ -149,13 +148,13 @@ export default function AccountPage() {
                                             <div
                                                 className={"flex justify-between b-4 border-4 rounded-md border-gray-400 p-4 bg-gray-300"}
                                                 key={list.ownerID}>
-                                                <div><h2 className={"text-2xl"}><strong>{list.listName}</strong></h2>
+                                                <div><h2 className={"text-lg lg:text-2xl"}><strong>{list.listName}</strong></h2>
                                                     <h2><a
                                                         onClick={() => addToClipboard(linkFromID(list.ownerID, true))}
-                                                        className={"cursor-pointer text-gray-800 hover:text-orange-400"}><strong>Copy
+                                                        className={"cursor-pointer text-sm text-gray-800 hover:text-orange-400"}><strong>Copy
                                                         Edit Link</strong></a></h2> <h2><a
                                                         onClick={() => addToClipboard(linkFromID(list.shareID, false))}
-                                                        className={"cursor-pointer text-gray-800 hover:text-orange-400"}><strong>Copy
+                                                        className={"cursor-pointer text-gray-800 text-sm hover:text-orange-400"}><strong>Copy
                                                         Share Link</strong></a></h2></div>
                                                 <ListButton onClick={() => router.push(linkFromID(list.ownerID, true))}
                                                             buttonText={"Go To List"}></ListButton> <ListButton
@@ -168,7 +167,6 @@ export default function AccountPage() {
                                 </div>
                             </div>
 
-                            {/* Right Panel */}
                             <div className="flex-1 min-h-0">
                                 <h1 className="text-3xl">Lists shared with you</h1>
                                 <div
@@ -178,10 +176,10 @@ export default function AccountPage() {
                                             <div
                                                 className={"flex justify-between b-4 border-4 rounded-md border-gray-400 p-4 bg-gray-300"}
                                                 key={list.shareID}>
-                                                <div><h2 className={"text-2xl"}><strong>{list.sharedListName}</strong>
+                                                <div><h2 className={"text-lg lg:text-2xl"}><strong>{list.sharedListName}</strong>
                                                 </h2> <h2><a
                                                     onClick={() => addToClipboard(linkFromID(list.shareID, false))}
-                                                    className={"cursor-pointer text-gray-800 hover:text-orange-400"}><strong>Copy
+                                                    className={"cursor-pointer text-sm text-gray-800 hover:text-orange-400"}><strong>Copy
                                                     Share Link</strong></a></h2></div>
                                                 <ListButton onClick={() => router.push(linkFromID(list.shareID, false))}
                                                             buttonText={"Go To List"}></ListButton> <ListButton

@@ -154,7 +154,7 @@ export default function CreateList() {
 
     return (
         <div>
-            <div className={`m-2 px-4 sm:px-6 md:px-8 flex flex-col items-center transition-all duration-100 ${showAddItem || showEditItem || showDeleteModal ? "blur-xs" : ""}`}>
+            <div className={`m-2 px-4 flex flex-col items-center transition-all duration-100 ${showAddItem || showEditItem || showDeleteModal ? "blur-xs" : ""}`}>
                 <div className={"w-full max-w-4xl space-y-1.5"}>
                     <h1 className={"text-4xl"}>{newList ? "Create New" : "Edit"} List</h1>
                     <div className={"flex justify-between pb-4 border-4 rounded-md border-gray-400 p-4 bg-gray-300"}>
@@ -165,18 +165,18 @@ export default function CreateList() {
                         {items.map((item, index) => <ItemElement key={index} item={item} editItem={fetchEditItem} deleteItem={deleteItem} />)}
                     </div>
                     <div className={"bg-gray-300 border-gray-400 border-4 rounded-md shadow-sm p-4"}>
-                        <h1 className={"text-3xl"}>List Links</h1>
-                        <h2><a onClick={() => {addToClipboard(linkFromID(true)); setCopiedEditLink(true)}} className={`cursor-pointer truncate hover:text-orange-400 ${copiedEditLink ? "text-gray-800" : "text-red-600"}`}><strong>Copy Edit Link</strong></a></h2>
-                        <div>
-                            <h2><a onClick={() => addToClipboard(linkFromID(false))} className={"cursor-pointer text-gray-800 hover:text-orange-400 truncate"}><strong>Copy Share Link</strong></a> <span hidden={!!shareID}> <ListButton onClick={() => handleGetShareID()} buttonText={"Create Sharable Link"} /></span> </h2>
-                        </div>
-                    </div>
-                    <div className={"bg-gray-300 border-gray-400 border-4 rounded-md shadow-sm p-4"}>
                         <div className={"pt-2 flex space-x-1.5"}>
                             <ListButton onClick={() => setShowAddItem(!showAddItem)} buttonText={'Add Item'}/>
                             <ListButton onClick={() => setShowDeleteModal(true)} buttonText={'Delete List'}/>
                             <ListButton onClick={() => setShowNewListModal(true)} buttonText={'New List'}/>
                             {changesSaved && <Notification text={"Changes Saved!"}/>}
+                        </div>
+                    </div>
+                    <div className={"bg-gray-300 border-gray-400 border-4 rounded-md shadow-sm p-4"}>
+                        <h1 className={"text-3xl"}>List Links</h1>
+                        <h2><a onClick={() => {addToClipboard(linkFromID(true)); setCopiedEditLink(true)}} className={`cursor-pointer truncate hover:text-orange-400 ${copiedEditLink ? "text-gray-800" : "text-red-600"}`}><strong>Copy Edit Link</strong></a></h2>
+                        <div>
+                            <h2><a onClick={() => addToClipboard(linkFromID(false))} className={"cursor-pointer text-gray-800 hover:text-orange-400 truncate"}><strong>Copy Share Link</strong></a> <span hidden={!!shareID}> <ListButton onClick={() => handleGetShareID()} buttonText={"Create Sharable Link"} /></span> </h2>
                         </div>
                     </div>
                 </div>
