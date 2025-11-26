@@ -33,8 +33,8 @@ const ViewItemElement = ({item, updatePurchaseCount}: ItemElementProps) => {
                             src={item.itemImageURL ? item.itemImageURL : undefined}
                             alt="Image of Item"
                         />
-                        <div>
-                            <h1 className="mt-2 font-semibold w-[200px] text-lg">{item.itemName}</h1>
+                        <div className={"max-w-40 lg:max-w-200"}>
+                            <h1 className="mt-2 font-semibold break-words text-lg">{item.itemName}</h1>
                             <div className="flex items-center gap-2">
                                 <ListInput
                                     className="text-center w-14"
@@ -82,8 +82,8 @@ const EditItemElement = ({item, editItem, deleteItem}: ItemElementProps) => {
                             src={item.itemImageURL ? item.itemImageURL : undefined}
                             alt="Image of Item"
                         />
-                        <div>
-                            <h1 className="mt-2 font-semibold w-[200px] text-lg">{item.itemName}</h1>
+                        <div className={"max-w-40 lg:max-w-200 "}>
+                            <h1 className="mt-2 font-semibold break-words text-lg">{item.itemName}</h1>
                             <h1 className="text-lg mt-2">Quantity: {item.itemQuantity}</h1>
                         </div>
 
