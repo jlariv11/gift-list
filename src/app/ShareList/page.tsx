@@ -72,11 +72,11 @@ export default function ShareList() {
             <div className={`m-2 px-4 sm:px-6 md:px-8 flex flex-col items-center transition-all duration-100 ${showModal ? "blur-xs" : ""}`}>
                 <div className={"w-full max-w-4xl space-y-1.5"}>
                     <h1 className={"text-4xl"}>View {listName}</h1>
-                    <div className={"flex gap-2"}>
-                        <div className={"w-2/3 h-150 overflow-y-auto border-4 rounded-md border-gray-400 p-4 bg-gray-300"}>
+                    <div className={"lg:flex gap-2"}>
+                        <div className={"lg:w-2/3 h-150 overflow-y-auto border-4 rounded-md border-gray-400 p-4 bg-gray-300"}>
                             {items.filter(i => i.itemQuantity !== i.itemQuantityPurchased).map((item) => <ItemElement key={item.itemID} item={item} updatePurchaseCount={updatePurchaseCount}/>)}
                         </div>
-                        <div className="w-1/3 h-150 border-4 rounded-md border-gray-400 ml-2 p-4 bg-gray-300 flex flex-col justify-between">
+                        <div className="mt-6 lg:mt-0 lg:w-1/3 min-h-50 lg:h-150 border-4 rounded-md border-gray-400 ml-2 p-4 bg-gray-300 flex flex-col justify-between">
                             <div>
                                 <h1 className={"text-xl font-bold"}>Purchases</h1>
                                 {purchasedItems.map((item) => (
