@@ -2,26 +2,31 @@ import {Item} from "../database/SaveList";
 import {FaMinus, FaPencil, FaTrashCan} from "react-icons/fa6";
 import ListButton from "./ListButton";
 import ListInput from "./ListInput";
-import {useState} from "react";
+import {useRef, useState} from "react";
 import {FaPlus} from "react-icons/fa";
+import {TutorialState} from "@/app/ShareList/tutorial/ShareTutorial";
+import {HighlightSquare} from "@/app/ShareList/tutorial/HighlightSquare";
 
 export interface ItemElementProps {
     item: Item;
     editItem?: (itemID: number) => void;
     deleteItem?: (itemID: number) => void;
     updatePurchaseCount?: (itemID: number | undefined, quantity: number) => void;
+    shareTutorialState?: TutorialState;
 }
 
 
-const ItemElement = ({item, editItem, deleteItem, updatePurchaseCount}: ItemElementProps) => {
-    return editItem ? <EditItemElement item={item} editItem={editItem} deleteItem={deleteItem} /> : <ViewItemElement item={item} updatePurchaseCount={updatePurchaseCount}/>
+const ItemElement = ({item, editItem, deleteItem, updatePurchaseCount, shareTutorialState}: ItemElementProps) => {
+    return editItem ? <EditItemElement item={item} editItem={editItem} deleteItem={deleteItem} /> : <ViewItemElement item={item} updatePurchaseCount={updatePurchaseCount} shareTutorialState={shareTutorialState} />
 }
 
 
-const ViewItemElement = ({item, updatePurchaseCount}: ItemElementProps) => {
+const ViewItemElement = ({item, updatePurchaseCount, shareTutorialState}: ItemElementProps) => {
     const [localQuantityPurchased, setLocalQuantityPurchased] = useState(item.itemQuantityPurchased ? item.itemQuantityPurchased : 0);
     const multiQuantityItem = item.itemQuantity > 1 || (item.itemQuantityPurchased !== undefined && item.itemQuantity - item.itemQuantityPurchased > 1);
     const [itemMarkedForPurchase, setItemMarkedForPurchase] = useState(false);
+    const linkRef = useRef<HTMLAnchorElement>(null);
+    const markPurchaseRef = useRef<HTMLInputElement>(null);
 
     function clamp(value: number, min: number, max: number) {
         return Math.min(Math.max(value, min), max);
@@ -46,6 +51,7 @@ const ViewItemElement = ({item, updatePurchaseCount}: ItemElementProps) => {
                     <div className={"flex space-x-3 items-center"}>
                         <h1>Mark Item as Purchased</h1>
                         <input
+                            ref={markPurchaseRef}
                             className="text-center scale-150"
                             type="checkbox"
                             checked={itemMarkedForPurchase}
@@ -106,9 +112,15 @@ const ViewItemElement = ({item, updatePurchaseCount}: ItemElementProps) => {
                             </div>
                         }
                     </div>
-                    <a className="text-lg text-orange-600 hover:text-orange-500" target="_blank" rel="noopener noreferrer" href={item.itemLink}>Link to Purchase</a>
+                    <a ref={linkRef} className="text-lg text-orange-600 hover:text-orange-500" target="_blank" rel="noopener noreferrer" href={item.itemLink}>Link to Purchase</a>
                 </div>
             </div>
+            {shareTutorialState === TutorialState.PURCHASE_LINK && (
+                <HighlightSquare targetRef={linkRef} />
+            )}
+            {shareTutorialState === TutorialState.MARK_FOR_PURCHASE && (
+                <HighlightSquare targetRef={markPurchaseRef} />
+            )}
         </>
     )
 }
