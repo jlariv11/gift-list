@@ -7,11 +7,26 @@ interface ModalProps {
     modalTitle: string;
     showModalToggle: (modalToggle: boolean) => void
     closeActions?: () => void;
+    position?: "top" | "bottom" | "left" | "right" | "";
 }
 
 function createModalContent(props: ModalProps) {
+    function getModalPosition(){
+        switch (props.position) {
+            case "top":
+                return "justify-center items-start"
+            case "bottom":
+                return "justify-center items-end"
+            case "left":
+                return "justify-start items-center"
+            case "right":
+                return "justify-end items-center"
+            default:
+                return "justify-center items-center"
+        }
+    }
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
+        <div className={`fixed inset-0 z-50 flex ${getModalPosition()}`}>
             <div className="w-full lg:w-200 px-3">
                 <div className="pb-4 border-4 rounded-md border-gray-400 p-4 bg-gray-300 shadow-lg">
                     <div className="p-2">

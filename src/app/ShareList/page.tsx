@@ -1,5 +1,5 @@
 "use client"
-import {useContext, useEffect, useState} from "react";
+import {useContext, useEffect, useRef, useState} from "react";
 import {Item, saveSharedList} from "../database/SaveList";
 import ListButton from "../elements/ListButton";
 import {loadViewList} from "../database/LoadList";
@@ -9,6 +9,8 @@ import WarningModal from "@/app/components/WarningModal";
 import Modal from "@/app/components/Modal";
 import {SessionContext} from "@/app/SessionContext";
 import {getCookie, setCookie} from "@/app/Cookies";
+import ShareTutorial, {TutorialState} from "@/app/ShareList/tutorial/ShareTutorial";
+import {HighlightSquare} from "@/app/ShareList/tutorial/HighlightSquare";
 
 export interface SimpleItem {
     itemID: number | undefined;
@@ -25,17 +27,24 @@ export default function ShareList() {
     const [showLearningModal, setShowLearningModal] = useState(false);
     const searchParams = useSearchParams();
     const session = useContext(SessionContext);
-    const [hasLearnedItemPurchasing, setHasLearnedItemPurchasing] = useState(false);
-    const [positionWord, setPositionWord] = useState("bottom");
+    const [hasCompletedShareTutorial, setHasCompletedShareTutorial] = useState(false);
+    const [state, setState] = useState(TutorialState.TUTORIAL_START);
+    const [tutorialModalPosition, setTutorialModalPosition] = useState<"top" | "bottom" | "left" | "right" | "">("");
+
+    const listRef = useRef<HTMLDivElement>(null);
+    const confirmPurchasesRef = useRef<HTMLButtonElement>(null);
+
 
     async function fetchList(shareID: string) {
         const listData = await loadViewList(shareID, session ? session.user.email : undefined);
         setListName(listData.listName);
         setItems(listData.items);
         setShareID(listData.shareID);
-        console.log(getCookie("ItemPurchasing"));
-        console.log(getCookie("ItemPurchasing") !== null);
-        setHasLearnedItemPurchasing(getCookie("ItemPurchasing") !== null);
+        const doneTutorial = getCookie("ShareTutorial") !== null;
+        setHasCompletedShareTutorial(doneTutorial);
+        if(!doneTutorial) {
+            setShowLearningModal(true);
+        }
     }
 
     useEffect(() => {
@@ -43,12 +52,29 @@ export default function ShareList() {
         if(shareID) {
             fetchList(shareID);
         }
-        const isMobile = window.innerWidth < 640;
-        setPositionWord(isMobile ? "Bottom" : "Right");
     }, [])
 
+    useEffect(() => {
+        const isMobile = window.innerWidth < 640;
+        switch (state){
+            case TutorialState.PURCHASE_LINK:
+                setTutorialModalPosition(isMobile ? "bottom" : "right")
+                break;
+            case TutorialState.MARK_FOR_PURCHASE:
+                setTutorialModalPosition(isMobile ? "bottom" : "right")
+                break;
+            case TutorialState.CONFIRM_PURCHASES:
+                setTutorialModalPosition(isMobile ? "" :"left");
+                break;
+            case TutorialState.LISTED_PURCHASES:
+                setTutorialModalPosition(isMobile ? "" :"left");
+                break;
+            default:
+                setTutorialModalPosition("");
+        }
+    }, [state]);
+
     function updatePurchaseCount(itemID: number | undefined, quantity: number){
-        console.log(hasLearnedItemPurchasing);
         const item = items.find(i => i.itemID === itemID);
         const localItem = purchasedItems.find(i => i.itemID === itemID);
         if(item && localItem) {
@@ -66,7 +92,7 @@ export default function ShareList() {
             const localItem = {itemID: item.itemID, itemName: item.itemName, itemQuantityPurchased: quantity - (item.itemQuantityPurchased || 0)};
             setPurchasedItems([...purchasedItems, localItem]);
 
-            if(!hasLearnedItemPurchasing){
+            if(!hasCompletedShareTutorial){
                 setShowLearningModal(true);
             }
         }
@@ -83,7 +109,6 @@ export default function ShareList() {
         saveSharedList({listName: listName, ownerID: "", shareID: shareID, items})
     }
 
-
     return (
         <div>
             <div className={`m-2 px-4 sm:px-6 md:px-8 flex flex-col items-center transition-all duration-100 ${showModal ? "blur-xs" : ""}`}>
@@ -91,9 +116,9 @@ export default function ShareList() {
                     <h1 className={"text-4xl"}>View {listName}</h1>
                     <div className={"lg:flex gap-2"}>
                         <div className={"lg:w-2/3 h-150 overflow-y-auto border-4 rounded-md border-gray-400 p-4 bg-gray-300"}>
-                            {items.filter(i => i.itemQuantity !== i.itemQuantityPurchased).map((item) => <ItemElement key={item.itemID} item={item} updatePurchaseCount={updatePurchaseCount}/>)}
+                            {items.filter(i => i.itemQuantity !== i.itemQuantityPurchased).map((item, idx) => <ItemElement key={item.itemID} shareTutorialState={idx == 0 ? state : undefined} item={item} updatePurchaseCount={updatePurchaseCount}/>)}
                         </div>
-                        <div className="mt-6 lg:mt-0 lg:w-1/3 min-h-50 lg:h-150 border-4 rounded-md border-gray-400 ml-2 p-4 bg-gray-300 flex flex-col justify-between">
+                        <div ref={listRef} className="mt-6 lg:mt-0 lg:w-1/3 min-h-50 lg:h-150 border-4 rounded-md border-gray-400 ml-2 p-4 bg-gray-300 flex flex-col justify-between">
                             <div>
                                 <h1 className={"text-xl font-bold"}>Purchases</h1>
                                 {purchasedItems.map((item) => (
@@ -103,8 +128,8 @@ export default function ShareList() {
                                     </div>
                                 ))}
                             </div>
-
                             <ListButton
+                                ref={confirmPurchasesRef}
                                 onClick={() => setShowModal(true)}
                                 buttonText="Confirm Purchases"
                             />
@@ -114,8 +139,30 @@ export default function ShareList() {
             </div>
             <div id={"modal"}></div>
             {showModal && <Modal modalTitle={"Purchase these Items?"} modalDivID={"modal"} modalBody={<WarningModal toggleModal={setShowModal} warning={"This will mark these items as purchased and will make these items unavailable to purchase by others. Do you want to continue?"} actionFunction={saveItems} />} showModalToggle={setShowModal} />}
-            {showLearningModal && <Modal modalTitle={"Purchasing Items"} modalDivID={"modal"} modalBody={<WarningModal toggleModal={setShowLearningModal} warning={`In order to finalize your purchases, you must press the \"Confirm Purchases\" Button on the ${positionWord} of the screen.`} actionFunction={() => {setCookie("ItemPurchasing", "true", 30); setHasLearnedItemPurchasing(true)}} />} showModalToggle={setShowLearningModal} closeActions={() => {setCookie("ItemPurchasing", "true", 30); setHasLearnedItemPurchasing(true)}} />}
-        </div>
+            {showLearningModal &&
+                <Modal
+                    modalTitle={"Tutorial"}
+                    modalDivID={"modal"}
+                    showModalToggle={setShowLearningModal}
+                    closeActions={() => {setState(TutorialState.TUTORIAL_START); setCookie("ShareTutorial", "true", 30); setHasCompletedShareTutorial(true)}}
+                    position={tutorialModalPosition}
+                    modalBody={
+                    <ShareTutorial
+                        state={state}
+                        setState={setState}
+                        toggleModal={setShowLearningModal}
+                        actionFunction={() => {setCookie("ShareTutorial", "true", 30); setHasCompletedShareTutorial(true);}}
+                    />
+                    }
+                />
+            }
 
+            {state === TutorialState.LISTED_PURCHASES && (
+                <HighlightSquare targetRef={listRef} />
+            )}
+            {state === TutorialState.CONFIRM_PURCHASES && (
+                <HighlightSquare targetRef={confirmPurchasesRef} />
+            )}
+        </div>
     )
 }
