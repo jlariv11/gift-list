@@ -36,6 +36,8 @@ export async function loadViewList(shareID: string, shareVisitor: string | undef
         listName: data.listName,
         items: data.Item,
     }
-    await axios.post(ROUTES.SET_USER_SHARE_LIST, {data: {shareVisitor, shareID}});
+    if(shareVisitor) {
+        await axios.post(ROUTES.SET_USER_SHARE_LIST, {data: {shareVisitor, shareID}});
+    }
     return listData;
 }
