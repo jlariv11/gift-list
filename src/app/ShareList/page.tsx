@@ -8,6 +8,7 @@ import {useSearchParams} from "next/navigation";
 import WarningModal from "@/app/components/WarningModal";
 import Modal from "@/app/components/Modal";
 import {SessionContext} from "@/app/SessionContext";
+import {getCookie, setCookie} from "@/app/Cookies";
 
 export interface SimpleItem {
     itemID: number | undefined;
@@ -21,14 +22,20 @@ export default function ShareList() {
     const [purchasedItems, setPurchasedItems] = useState<SimpleItem[]>([]);
     const [shareID, setShareID] = useState("");
     const [showModal, setShowModal] = useState(false);
+    const [showLearningModal, setShowLearningModal] = useState(false);
     const searchParams = useSearchParams();
     const session = useContext(SessionContext);
+    const [hasLearnedItemPurchasing, setHasLearnedItemPurchasing] = useState(false);
+    const [positionWord, setPositionWord] = useState("bottom");
 
     async function fetchList(shareID: string) {
         const listData = await loadViewList(shareID, session ? session.user.email : undefined);
         setListName(listData.listName);
         setItems(listData.items);
         setShareID(listData.shareID);
+        console.log(getCookie("ItemPurchasing"));
+        console.log(getCookie("ItemPurchasing") !== null);
+        setHasLearnedItemPurchasing(getCookie("ItemPurchasing") !== null);
     }
 
     useEffect(() => {
@@ -36,22 +43,32 @@ export default function ShareList() {
         if(shareID) {
             fetchList(shareID);
         }
+        const isMobile = window.innerWidth < 640;
+        setPositionWord(isMobile ? "Bottom" : "Right");
     }, [])
 
     function updatePurchaseCount(itemID: number | undefined, quantity: number){
+        console.log(hasLearnedItemPurchasing);
         const item = items.find(i => i.itemID === itemID);
         const localItem = purchasedItems.find(i => i.itemID === itemID);
         if(item && localItem) {
             const newQuantity = Math.min(quantity - (item.itemQuantityPurchased || 0), item.itemQuantity);
-
             if (newQuantity <= 0) {
                 setPurchasedItems(prev => prev.filter(i => i.itemID !== itemID));
             } else {
                 setPurchasedItems(prev => prev.map(i => i.itemID === itemID ? { ...i, itemQuantityPurchased: newQuantity } : i));
             }
         }else if(item){
+            const newQuantity = Math.min(quantity - (item.itemQuantityPurchased || 0), item.itemQuantity);
+            if(newQuantity <= 0){
+                return;
+            }
             const localItem = {itemID: item.itemID, itemName: item.itemName, itemQuantityPurchased: quantity - (item.itemQuantityPurchased || 0)};
             setPurchasedItems([...purchasedItems, localItem]);
+
+            if(!hasLearnedItemPurchasing){
+                setShowLearningModal(true);
+            }
         }
     }
 
@@ -97,6 +114,7 @@ export default function ShareList() {
             </div>
             <div id={"modal"}></div>
             {showModal && <Modal modalTitle={"Purchase these Items?"} modalDivID={"modal"} modalBody={<WarningModal toggleModal={setShowModal} warning={"This will mark these items as purchased and will make these items unavailable to purchase by others. Do you want to continue?"} actionFunction={saveItems} />} showModalToggle={setShowModal} />}
+            {showLearningModal && <Modal modalTitle={"Purchasing Items"} modalDivID={"modal"} modalBody={<WarningModal toggleModal={setShowLearningModal} warning={`In order to finalize your purchases, you must press the \"Confirm Purchases\" Button on the ${positionWord} of the screen.`} actionFunction={() => {setCookie("ItemPurchasing", "true", 30); setHasLearnedItemPurchasing(true)}} />} showModalToggle={setShowLearningModal} closeActions={() => {setCookie("ItemPurchasing", "true", 30); setHasLearnedItemPurchasing(true)}} />}
         </div>
 
     )

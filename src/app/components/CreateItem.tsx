@@ -48,24 +48,24 @@ export default function CreateItem({setShowAddItem, addItem, itemProps}: CreateI
         <div>
             <div>
                 <div className={"p-2"}>
-                    <div>
-                        <div className={"flex my-2"}>
+                    <div className={"w-full max-w-xl mx-auto"}>
+                        <div className={"flex justify-center"}>
                             <ListInput label={'Item Name:'} type={'text'} value={itemName} onChange={(e) => setItemName(e.target.value)}></ListInput>
                             <DescriptiveQuestion description={"The name of your item"}></DescriptiveQuestion>
                         </div>
-                        <div className={"flex my-2"}>
+                        <div className={"flex justify-center my-2"}>
                             <ListInput label={'Item Quantity:'} type={'number'} min={1} value={itemQuantity} onChange={(e) => setItemQuantity(Number(e.target.value))}></ListInput>
                             <DescriptiveQuestion description={"The number of this item you want"}></DescriptiveQuestion>
                         </div>
-                        <div className={"flex my-2"}>
+                        <div className={"flex justify-center my-2"}>
                             <ListInput label={'Item Link:'} type={'text'} value={itemLink} onChange={(e) => setItemLink(e.target.value)}></ListInput>
                             <DescriptiveQuestion description={"The link to where someone can purchase this item"}></DescriptiveQuestion>
                         </div>
-                        <div className={"flex my-2"}>
+                        <div className={"flex justify-center my-2"}>
                             <ListInput label={'Item Image URL:'} type={'text'} value={itemImageURL ? itemImageURL : ""} onChange={(e) => setItemImageURL(e.target.value)}></ListInput>
                             <DescriptiveQuestion description={"A link to an image that represents your item"}></DescriptiveQuestion>
                         </div>
-                        <div className={"flex my-2"}>
+                        <div className={"flex justify-center my-2"}>
                             <ListInput className={"max-w-75"} label={'Upload Image from Files:'} type={'file'} accept={"image/*"} onChange={(e) => {
                                 const formData = new FormData();
                                 const file = e.target.files?.[0];
@@ -76,11 +76,13 @@ export default function CreateItem({setShowAddItem, addItem, itemProps}: CreateI
                             }}></ListInput>
                             <DescriptiveQuestion description={"Upload an image to represent your item"}></DescriptiveQuestion>
                         </div>
-                        <div className={"flex my-2"}>
+                        <div className={"flex justify-center  my-2"}>
                             <ListTextarea label={'Item Description:'} cols={30} rows={5} value={itemDescription} onChange={(e) => setItemDescription(e.target.value)}></ListTextarea>
                             <DescriptiveQuestion description={"A description or extra details someone might need to know about purchasing this item"}></DescriptiveQuestion>
                         </div>
-                        <ListButton buttonText={"Save"} onClick={() => handleAddItem()}></ListButton>
+                        <div className={"flex justify-center"}>
+                            <ListButton className={"w-2/3"} buttonText={"Save"} onClick={() => handleAddItem()}></ListButton>
+                        </div>
                     </div>
                 </div>
             </div>

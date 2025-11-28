@@ -1,13 +1,13 @@
-type ListButtonProps = {
+interface ListButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement>  {
     onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
     buttonText?: string;
     buttonIcon?: React.ReactNode
     className?: string;
 }
 
-function ListButton({onClick, buttonText, buttonIcon}: ListButtonProps) {
+function ListButton(props: ListButtonProps) {
     return (
-        <button onClick={(e) => onClick?.(e)} className={"text-gray-800 bg-orange-400 p-4 rounded-xl hover:bg-orange-300 shadow-md"}>{buttonText}{buttonIcon}</button>
+        <button {...props} onClick={(e) => props.onClick?.(e)} className={`text-gray-800 bg-orange-400 p-4 rounded-xl hover:bg-orange-300 shadow-md ${props.className}`}>{props.buttonText}{props.buttonIcon}</button>
     )
 }
 
