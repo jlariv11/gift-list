@@ -5,9 +5,9 @@ interface ListButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> 
     className?: string;
 }
 
-function ListButton(props: ListButtonProps) {
+function ListButton({ buttonText, buttonIcon, className, onClick, ...rest }: ListButtonProps) {
     return (
-        <button {...props} onClick={(e) => props.onClick?.(e)} className={`text-gray-800 bg-orange-400 p-4 rounded-xl hover:bg-orange-300 shadow-md ${props.className}`}>{props.buttonText}{props.buttonIcon}</button>
+        <button {...rest} onClick={(e) => onClick?.(e)} className={`text-gray-800 bg-orange-400 p-4 rounded-xl hover:bg-orange-300 shadow-md ${className}`}>{buttonText}{buttonIcon}</button>
     )
 }
 
