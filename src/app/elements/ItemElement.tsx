@@ -112,6 +112,8 @@ const ViewItemElement = ({item, updatePurchaseCount, shareTutorialState}: ItemEl
                             </div>
                         }
                     </div>
+                    <h1 hidden={item.itemQuantity == 1}>Already Purchased: {item.itemQuantityPurchased ? item.itemQuantityPurchased : 0}</h1>
+                    <h1 hidden={item.itemQuantity == 1}>Requested: {item.itemQuantity}</h1>
                     <a ref={linkRef} className="text-lg text-orange-600 hover:text-orange-500" target="_blank" rel="noopener noreferrer" href={item.itemLink}>Link to Purchase</a>
                 </div>
             </div>
