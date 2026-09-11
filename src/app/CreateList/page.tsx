@@ -6,11 +6,11 @@ import ListButton from "../elements/ListButton";
 import ListInput from "../elements/ListInput";
 import CreateItem from "../components/CreateItem";
 import {useSearchParams} from "next/navigation";
-import Notification from "@/app/components/Notification";
-import {getShareID, loadEditList} from "@/app/database/LoadList";
+import Notification from "../components/Notification";
+import {getShareID, loadEditList} from "../database/LoadList";
 import {SessionContext} from "../SessionContext";
-import Modal from "@/app/components/Modal";
-import WarningModal from "@/app/components/WarningModal";
+import Modal from "../components/Modal";
+import WarningModal from "../components/WarningModal";
 
 export interface ListProps {
     listName: string;
@@ -70,15 +70,21 @@ export default function CreateList() {
         const listData = {
             listName: listName,
             ownerID: ownerID,
-            auth0Owner: (newList && session) ? session.user.email : null, // Only want to give ownership if it's a new list
+            newList: newList, // Only want to give ownership if it's a new list
             shareID: shareID,
             items: items,
         }
-        const id = await saveList(listData);
+        const data = await saveList(listData);
         if(newList){
-            setOwnerID(id);
+            setOwnerID(data.ownerID);
             setNewList(false);
         }
+        setItems(prevItems =>
+            prevItems.map((item, i) => ({
+                ...item,
+                itemID: data.itemIDs[i],
+            }))
+        );
     }
 
     useEffect(() => {

@@ -5,12 +5,12 @@ import ListButton from "../elements/ListButton";
 import {loadViewList} from "../database/LoadList";
 import ItemElement from "../elements/ItemElement";
 import {useSearchParams} from "next/navigation";
-import WarningModal from "@/app/components/WarningModal";
-import Modal from "@/app/components/Modal";
-import {SessionContext} from "@/app/SessionContext";
-import {getCookie, setCookie} from "@/app/Cookies";
-import ShareTutorial, {TutorialState} from "@/app/ShareList/tutorial/ShareTutorial";
-import {HighlightSquare} from "@/app/ShareList/tutorial/HighlightSquare";
+import WarningModal from "../components/WarningModal";
+import Modal from "../components/Modal";
+import {SessionContext} from "../SessionContext";
+import {getCookie, setCookie} from "../Cookies";
+import ShareTutorial, {TutorialState} from "./tutorial/ShareTutorial";
+import {HighlightSquare} from "./tutorial/HighlightSquare";
 
 export interface SimpleItem {
     itemID: number | undefined;

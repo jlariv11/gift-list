@@ -1,14 +1,14 @@
 "use client"
 import {SessionContext} from "../SessionContext";
 import {useContext, useEffect, useState} from "react";
-import ListButton from "@/app/elements/ListButton";
-import Modal from "@/app/components/Modal";
-import ListInput from "@/app/elements/ListInput";
-import {addUserToList, addUserToSharedList, getUserListInfo, getUserSharedListInfo} from "@/app/database/UserLists";
+import ListButton from "../elements/ListButton";
+import Modal from "../components/Modal";
+import ListInput from "../elements/ListInput";
+import {addUserToList, addUserToSharedList, getUserListInfo, getUserSharedListInfo} from "../database/UserLists";
 import {SessionData} from "@auth0/nextjs-auth0/types";
 import {FaTrashCan} from "react-icons/fa6";
-import {deleteList, removeSharedList} from "@/app/database/SaveList";
-import WarningModal from "@/app/components/WarningModal";
+import {deleteList, removeSharedList} from "../database/SaveList";
+import WarningModal from "../components/WarningModal";
 import {useRouter} from "next/navigation";
 
 interface ListProps {

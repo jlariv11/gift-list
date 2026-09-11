@@ -1,6 +1,6 @@
 import axios from "axios";
 import {Item} from "./SaveList";
-import {ROUTES} from "@/app/APIRoutes";
+import {ROUTES} from "../APIRoutes";
 
 export interface ListData {
     ownerID: string;

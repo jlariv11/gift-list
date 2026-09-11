@@ -2,7 +2,7 @@ import {useEffect, useRef, useState} from "react";
 import {Item} from "../database/SaveList"
 import ListInput from "../elements/ListInput";
 import ListButton from "../elements/ListButton";
-import ListTextarea from "@/app/elements/ListTextarea";
+import ListTextarea from "../elements/ListTextarea";
 import {FaQuestionCircle} from "react-icons/fa";
 
 type CreateItemProps = {

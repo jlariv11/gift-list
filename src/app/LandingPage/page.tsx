@@ -1,9 +1,45 @@
 "use client"
-import ListButton from "@/app/elements/ListButton";
+import ListButton from "../elements/ListButton";
 import {useRouter} from "next/navigation";
+import {useEffect} from "react";
+import axios from "axios";
+import {ROUTES} from "../APIRoutes"
 
 export default function LandingPage() {
     const router = useRouter();
+
+    // useEffect(() => {
+    //     async function createList() {
+    //         try {
+    //             // Get access token from Auth0
+    //             const tokenResponse = await fetch("/auth/access-token");
+    //
+    //             if (!tokenResponse.ok) {
+    //                 throw new Error("Failed to get access token");
+    //             }
+    //
+    //             const { token } = await tokenResponse.json();
+    //
+    //             // Call Express API with the token
+    //             const response = await axios.post(
+    //                 ROUTES.CREATE_LIST,
+    //                 {}, // request body
+    //                 {
+    //                     headers: {
+    //                         Authorization: `Bearer ${token}`,
+    //                     },
+    //                 }
+    //             );
+    //
+    //             console.log(response.data);
+    //         } catch (err) {
+    //             console.error("Failed to create list:", err);
+    //         }
+    //     }
+    //
+    //     createList();
+    // }, []);
+
     return (
         <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-pink-50 to-pink-100 px-6">
             <div className="max-w-2xl text-center space-y-6">

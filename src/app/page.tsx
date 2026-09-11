@@ -2,7 +2,7 @@
 
 import {useRouter, useSearchParams} from "next/navigation";
 import {useEffect} from "react";
-import LandingPage from "@/app/LandingPage/page";
+import LandingPage from "./LandingPage/page";
 
 export default function Home() {
 

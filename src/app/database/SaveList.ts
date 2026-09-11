@@ -1,6 +1,7 @@
 import axios from "axios";
-import {ROUTES} from "@/app/APIRoutes";
-import {ListProps} from "@/app/CreateList/page";
+import {ROUTES} from "../APIRoutes";
+import {ListProps} from "../CreateList/page";
+import {getAccessToken} from "@/app/Helper";
 
 export interface Item {
     itemID: number | undefined;
@@ -14,27 +15,18 @@ export interface Item {
 }
 
 export async function saveList(listProps: ListProps) {
-    const data: {ownerID: string, itemIDs: number[]} = (await axios.post(ROUTES.SAVE_LIST, listProps)).data;
-    for(let i = 0; i < data.itemIDs.length; i++){
-        listProps.items[i].itemID = data.itemIDs[i];
-    }
-
-    for (const item of listProps.items) {
-        if(item.itemImageFile && item.itemImageFile.has("file") && item.itemID){
-            const formData = item.itemImageFile;
-            formData.set("itemID", item.itemID.toString());
-            formData.set("ownerID", listProps.ownerID);
-            formData.set("name", item.itemName);
-            const url = (await axios.post(ROUTES.SAVE_IMAGES, formData, {
+    const token = await getAccessToken();
+    const data: {ownerID: string, itemIDs: number[]} = (
+        await axios.post(
+            ROUTES.SAVE_LIST,
+            listProps,
+            {
                 headers: {
-                    'Content-Type': 'multipart/form-data'
-                }
-            })).data;
-            item.itemImageURL = url.url;
-        }
-    }
-
-    return data.ownerID;
+                    Authorization: `Bearer ${token}`,
+                },
+            }
+            )).data;
+    return data;
 }
 
 export async function saveSharedList(listProps: ListProps) {

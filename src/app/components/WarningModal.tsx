@@ -1,4 +1,4 @@
-import ListButton from "@/app/elements/ListButton";
+import ListButton from "../elements/ListButton";
 
 
 interface WarningProps {

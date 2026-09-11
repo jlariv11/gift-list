@@ -4,8 +4,8 @@ import ListButton from "./ListButton";
 import ListInput from "./ListInput";
 import {useRef, useState} from "react";
 import {FaPlus} from "react-icons/fa";
-import {TutorialState} from "@/app/ShareList/tutorial/ShareTutorial";
-import {HighlightSquare} from "@/app/ShareList/tutorial/HighlightSquare";
+import {TutorialState} from "../ShareList/tutorial/ShareTutorial";
+import {HighlightSquare} from "../ShareList/tutorial/HighlightSquare";
 
 export interface ItemElementProps {
     item: Item;
