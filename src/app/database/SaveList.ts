@@ -10,7 +10,6 @@ export interface Item {
     itemQuantityPurchased: number | undefined;
     itemLink: string;
     itemImageURL: string | null;
-    itemImageFile: FormData | undefined;
     itemDescription: string;
 }
 

@@ -9,3 +9,8 @@ export async function getAccessToken() {
 
     return data.token;
 }
+
+export async function hasAccessToken() {
+    const token = await getAccessToken();
+    return !!token;
+}

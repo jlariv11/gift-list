@@ -1,11 +1,11 @@
-import {Item} from "../database/SaveList";
-import {FaMinus, FaPencil, FaTrashCan} from "react-icons/fa6";
+import { Item } from "../database/SaveList";
+import {FaMinus, FaPencil, FaTrashCan, FaArrowUpRightFromSquare} from "react-icons/fa6";
+import { FaPlus } from "react-icons/fa";
 import ListButton from "./ListButton";
 import ListInput from "./ListInput";
-import {useRef, useState} from "react";
-import {FaPlus} from "react-icons/fa";
-import {TutorialState} from "../ShareList/tutorial/ShareTutorial";
-import {HighlightSquare} from "../ShareList/tutorial/HighlightSquare";
+import { useRef, useState } from "react";
+import { TutorialState } from "../ShareList/tutorial/ShareTutorial";
+import { HighlightSquare } from "../ShareList/tutorial/HighlightSquare";
 
 export interface ItemElementProps {
     item: Item;
@@ -15,16 +15,16 @@ export interface ItemElementProps {
     shareTutorialState?: TutorialState;
 }
 
-
 const ItemElement = ({item, editItem, deleteItem, updatePurchaseCount, shareTutorialState}: ItemElementProps) => {
-    return editItem ? <EditItemElement item={item} editItem={editItem} deleteItem={deleteItem} /> : <ViewItemElement item={item} updatePurchaseCount={updatePurchaseCount} shareTutorialState={shareTutorialState} />
-}
-
-
+    return editItem ? (<EditItemElement item={item} editItem={editItem} deleteItem={deleteItem}/>) : (<ViewItemElement item={item} updatePurchaseCount={updatePurchaseCount} shareTutorialState={shareTutorialState}/>);
+};
 const ViewItemElement = ({item, updatePurchaseCount, shareTutorialState}: ItemElementProps) => {
-    const [localQuantityPurchased, setLocalQuantityPurchased] = useState(item.itemQuantityPurchased ? item.itemQuantityPurchased : 0);
+    const [localQuantityPurchased, setLocalQuantityPurchased] = useState(item.itemQuantityPurchased ?? 0);
+
     const multiQuantityItem = item.itemQuantity > 1 || (item.itemQuantityPurchased !== undefined && item.itemQuantity - item.itemQuantityPurchased > 1);
+
     const [itemMarkedForPurchase, setItemMarkedForPurchase] = useState(false);
+
     const linkRef = useRef<HTMLAnchorElement>(null);
     const markPurchaseRef = useRef<HTMLInputElement>(null);
 
@@ -34,143 +34,238 @@ const ViewItemElement = ({item, updatePurchaseCount, shareTutorialState}: ItemEl
 
     return (
         <>
-            <div className="bg-gray-400 rounded-lg p-4 my-2">
-                <div className={"flex items-center justify-between"}>
-                    <img
-                        className="border-2 rounded-lg w-[150px] h-[100px] lg:w-[250px] lg:h-[150px] object-cover"
-                        src={item.itemImageURL ? item.itemImageURL : undefined}
-                        alt="No Image Provided"
-                    />
-                    <div className="border-2 rounded-lg p-2 w-[150px] h-[100px] lg:w-[250px] lg:h-[150px]  overflow-y-scroll text-wrap">
-                        {item.itemDescription.length === 0 ? "No Description" : item.itemDescription}
-                    </div>
-                </div>
-                <div>
-                    <h1 className="mt-2 font-semibold break-words text-lg">{item.itemName}</h1>
+            <article className=" my-3 overflow-hidden rounded-xl border border-border bg-surface transition hover:border-[#D8D8D2] hover:shadow-sm">
+                <div className="flex flex-col sm:flex-row">
 
-                    <div className={"flex space-x-3 items-center"}>
-                        <h1>Mark Item as Purchased</h1>
-                        <input
-                            ref={markPurchaseRef}
-                            className="text-center scale-150"
-                            type="checkbox"
-                            checked={itemMarkedForPurchase}
-                            onChange={(e) => {
-                                if(!multiQuantityItem) {
-                                    const quantity = e.target.checked ? 1 : 0;
-                                    setLocalQuantityPurchased(quantity);
-                                    updatePurchaseCount?.(item.itemID, quantity);
-                                }else {
-                                    if(!e.target.checked) {
-                                        const quantity = item.itemQuantityPurchased ? item.itemQuantityPurchased : 0;
-                                        setLocalQuantityPurchased(quantity);
-                                        updatePurchaseCount?.(item.itemID, quantity);
-                                    }
-                                }
-                                setItemMarkedForPurchase(e.target.checked);
-                            }}
-                        />
-                        {(itemMarkedForPurchase && multiQuantityItem) &&
-                            <div className={"px-2 select-none flex items-center"}>
-                                <div className={"z-10 cursor-pointer px-2"} onClick={() => {
-                                    const quantity = clamp(localQuantityPurchased - 1, item.itemQuantityPurchased ? item.itemQuantityPurchased : 0, item.itemQuantity);
-                                    setLocalQuantityPurchased(quantity);
-                                    updatePurchaseCount?.(item.itemID, quantity);
-                                }}>
-                                    <FaMinus className={"text-sm"}/>
-                                </div>
-                                <ListInput
-                                    className="text-center w-14"
-                                    label=""
-                                    type="number"
-                                    value={localQuantityPurchased}
-                                    min={item.itemQuantityPurchased}
-                                    max={item.itemQuantity}
-                                    onChange={(e) => {
-                                        if(e.target.value == "" && localQuantityPurchased == 0){
-                                            return;
-                                        }
-                                        setLocalQuantityPurchased(Number(e.target.value));
-                                        updatePurchaseCount?.(item.itemID, Number(e.target.value));
-                                    }}
-                                    onBlur={(e) => {
-                                        setLocalQuantityPurchased(clamp(Number(e.target.value), Number(e.target.min), Number(e.target.max)));
-                                        if(e.target.value == "") {
-                                            e.target.value = String(item.itemQuantityPurchased);
-                                            updatePurchaseCount?.(item.itemID, Number(e.target.value));
-                                        }
-                                    }}
-                                    onFocus={(e) => e.target.value = ""}
-                                />
-                                <div className={"z-10 cursor-pointer px-2"} onClick={() => {
-                                    const quantity = clamp(localQuantityPurchased + 1, item.itemQuantityPurchased ? item.itemQuantityPurchased : 0, item.itemQuantity);
-                                    setLocalQuantityPurchased(quantity);
-                                    updatePurchaseCount?.(item.itemID, quantity);
-                                }}>
-                                    <FaPlus className={"text-sm"}/>
-                                </div>
-                            </div>
-                        }
+                    {/* Product image */}
+                    <div className="shrink-0 bg-surface-muted sm:w-48 lg:w-56">
+                        {item.itemImageURL ? (<img className=" h-52 w-full object-cover sm:h-full sm:min-h-[210px]" src={item.itemImageURL} alt={item.itemName}/>) : (<div className=" flex h-52 items-center justify-center px-4 text-sm text-muted sm:h-full sm:min-h-[210px]">No image</div>)}
                     </div>
-                    <h1 hidden={item.itemQuantity == 1}>Already Purchased: {item.itemQuantityPurchased ? item.itemQuantityPurchased : 0}</h1>
-                    <h1 hidden={item.itemQuantity == 1}>Requested: {item.itemQuantity}</h1>
-                    <a ref={linkRef} className="text-lg text-orange-600 hover:text-orange-500" target="_blank" rel="noopener noreferrer" href={item.itemLink}>Link to Purchase</a>
+
+                    {/* Item information */}
+                    <div className="flex min-w-0 flex-1 flex-col p-5 sm:p-6">
+
+                        <div className="flex-1">
+                            <h2 className=" break-words text-xl font-semibold tracking-tight text-foreground">{item.itemName}</h2>
+
+                            {item.itemDescription && (<p className=" mt-2 max-w-2xl break-words text-sm leading-6 text-muted">{item.itemDescription}</p>)}
+
+                            {/* Quantity information */}
+                            {item.itemQuantity > 1 && (
+                                <div className=" mt-4 flex flex-wrap gap-x-5 gap-y-1 text-sm">
+                                    <span className="text-muted">
+                                        Requested{" "}
+                                        <span className="font-medium text-foreground">{item.itemQuantity}</span>
+                                    </span>
+
+                                    <span className="text-muted">
+                                        Purchased{" "}
+                                        <span className="font-medium text-foreground">{item.itemQuantityPurchased ?? 0}</span>
+                                    </span>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Purchase controls */}
+                        <div className=" mt-6 flex flex-col gap-4 border-t border-border pt-4 lg:flex-row lg:items-center lg:justify-between">
+                            <div className="flex flex-wrap items-center gap-4">
+
+                                <label className=" flex cursor-pointer select-none items-center gap-3 text-sm font-medium text-foreground">
+                                    <input
+                                        ref={markPurchaseRef} type="checkbox" checked={itemMarkedForPurchase} className=" h-4 w-4 accent-primary cursor-pointer"
+                                        onChange={(e) => {
+                                            if (!multiQuantityItem) {
+                                                const quantity =
+                                                    e.target.checked ? 1 : 0;
+
+                                                setLocalQuantityPurchased(quantity);
+
+                                                updatePurchaseCount?.(
+                                                    item.itemID,
+                                                    quantity
+                                                );
+                                            } else if (!e.target.checked) {
+                                                const quantity =
+                                                    item.itemQuantityPurchased ?? 0;
+
+                                                setLocalQuantityPurchased(quantity);
+
+                                                updatePurchaseCount?.(
+                                                    item.itemID,
+                                                    quantity
+                                                );
+                                            }
+
+                                            setItemMarkedForPurchase(
+                                                e.target.checked
+                                            );
+                                        }}
+                                    />
+                                    Mark as purchased
+                                </label>
+
+                                {itemMarkedForPurchase && multiQuantityItem && (
+                                    <div className=" flex items-center rounded-lg border border-border bg-page p-1">
+                                        <button type="button" aria-label="Decrease quantity" className=" flex h-8 w-8 items-center justify-center rounded-md text-muted transition-colors hover:bg-surface hover:text-foreground"
+                                            onClick={() => {
+                                                const quantity = clamp(
+                                                    localQuantityPurchased - 1,
+                                                    item.itemQuantityPurchased ?? 0,
+                                                    item.itemQuantity
+                                                );
+
+                                                setLocalQuantityPurchased(quantity);
+
+                                                updatePurchaseCount?.(
+                                                    item.itemID,
+                                                    quantity
+                                                );
+                                            }}
+                                        >
+                                            <FaMinus className="text-xs" />
+                                        </button>
+
+                                        <ListInput className=" w-12 border-0 bg-transparent px-1 py-1.5 text-center focus:ring-0" label="" type="number" value={localQuantityPurchased} min={item.itemQuantityPurchased} max={item.itemQuantity}
+                                            onChange={(e) => {
+                                                if (
+                                                    e.target.value === "" &&
+                                                    localQuantityPurchased === 0
+                                                ) {
+                                                    return;
+                                                }
+
+                                                const quantity = Number(
+                                                    e.target.value
+                                                );
+
+                                                setLocalQuantityPurchased(
+                                                    quantity
+                                                );
+
+                                                updatePurchaseCount?.(
+                                                    item.itemID,
+                                                    quantity
+                                                );
+                                            }}
+                                            onBlur={(e) => {
+                                                const quantity = clamp(
+                                                    Number(e.target.value),
+                                                    Number(e.target.min),
+                                                    Number(e.target.max)
+                                                );
+
+                                                setLocalQuantityPurchased(
+                                                    quantity
+                                                );
+
+                                                if (e.target.value === "") {
+                                                    e.target.value = String(
+                                                        item.itemQuantityPurchased ?? 0
+                                                    );
+
+                                                    updatePurchaseCount?.(
+                                                        item.itemID,
+                                                        Number(e.target.value)
+                                                    );
+                                                }
+                                            }}
+                                            onFocus={(e) => {
+                                                e.target.value = "";
+                                            }}
+                                        />
+
+                                        <button type="button" aria-label="Increase quantity" className=" flex h-8 w-8 items-center justify-center rounded-md text-muted transition-colors hover:bg-surface hover:text-foreground"
+                                            onClick={() => {
+                                                const quantity = clamp(
+                                                    localQuantityPurchased + 1,
+                                                    item.itemQuantityPurchased ?? 0,
+                                                    item.itemQuantity
+                                                );
+
+                                                setLocalQuantityPurchased(quantity);
+
+                                                updatePurchaseCount?.(
+                                                    item.itemID,
+                                                    quantity
+                                                );
+                                            }}
+                                        >
+                                            <FaPlus className="text-xs" />
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+
+                            {item.itemLink && (
+                                <a ref={linkRef} href={item.itemLink} target="_blank" rel="noopener noreferrer" className=" inline-flex items-center gap-2 text-sm font-medium text-primary transition-colors hover:text-primary-hover">
+                                    View gift
+                                    <FaArrowUpRightFromSquare className="text-xs" />
+                                </a>
+                            )}
+                        </div>
+                    </div>
                 </div>
-            </div>
+            </article>
+
             {shareTutorialState === TutorialState.PURCHASE_LINK && (
                 <HighlightSquare targetRef={linkRef} />
             )}
+
             {shareTutorialState === TutorialState.MARK_FOR_PURCHASE && (
                 <HighlightSquare targetRef={markPurchaseRef} />
             )}
         </>
-    )
-}
+    );
+};
 
 const EditItemElement = ({item, editItem, deleteItem}: ItemElementProps) => {
     return (
-        <>
-            <div className="bg-gray-400 rounded-lg p-4 my-2">
-                <div className="flex gap-4">
-                    <div className="flex flex-col items-start min-w-[100px] lg:min-w-[200px]">
-                        <img
-                            className="border-2 rounded-lg w-[125px] h-[75px] lg:w-[200px] lg:h-[150px] object-cover"
-                            src={item.itemImageURL ? item.itemImageURL : undefined}
-                            alt="Image of Item"
-                        />
-                        <div className={"max-w-40 lg:max-w-200 "}>
-                            <h1 className="mt-2 font-semibold break-words text-lg">{item.itemName}</h1>
-                            <h1 className="text-lg mt-2">Quantity: {item.itemQuantity}</h1>
-                        </div>
+        <article className=" my-3 overflow-hidden rounded-xl border border-border bg-surface transition hover:border-[#D8D8D2] hover:shadow-sm">
+            <div className="flex flex-col sm:flex-row">
 
+                {/* Image */}
+                <div className="shrink-0 bg-surface-muted sm:w-48 lg:w-56">
+                    {item.itemImageURL ? (<img className=" h-48 w-full object-cover sm:h-full sm:min-h-[190px]" src={item.itemImageURL} alt={item.itemName}/>) : (<div className=" flex h-48 items-center justify-center text-sm text-muted sm:h-full">No image</div>)}
+                </div>
+
+                {/* Content */}
+                <div className="flex min-w-0 flex-1 flex-col p-5 sm:p-6">
+
+                    <div className="flex-1">
+                        <h2 className=" break-words text-xl font-semibold tracking-tight text-foreground">{item.itemName}</h2>
+
+                        {item.itemDescription ? (<p className=" mt-2 max-w-2xl break-words text-sm leading-6 text-muted">{item.itemDescription}</p>) : (<p className="mt-2 text-sm italic text-muted">No description</p>)}
+
+                        <p className="mt-4 text-sm text-muted">
+                            Quantity{" "}
+                            <span className="font-medium text-foreground">{item.itemQuantity}</span>
+                        </p>
                     </div>
 
-                    <div className="flex flex-col justify-between flex-1">
-                        <div className="border-2 rounded-lg p-2 w-[150px] h-[100px] lg:w-[250px] lg:h-[150px] overflow-y-scroll text-wrap">
-                            {item.itemDescription.length === 0 ? "No Description" : item.itemDescription}
-                        </div>
+                    {/* Actions */}
+                    <div className=" mt-6 flex justify-end gap-2 border-t border-border pt-4">
+                        <ListButton variant="secondary" aria-label="Edit gift"
+                            onClick={() => {
+                                if (item.itemID) {
+                                    editItem?.(item.itemID);
+                                }
+                            }}
+                            buttonIcon={<FaPencil />}
+                        />
 
-                        <div className="flex justify-end gap-2 mt-4">
-                            <ListButton
-                                onClick={() => {
-                                    if (item.itemID) editItem?.(item.itemID);
-                                }}
-                                buttonIcon={<FaPencil />}
-                            />
-                            <ListButton
-                                onClick={() => {
-                                    if (item.itemID) deleteItem?.(item.itemID);
-                                }}
-                                buttonIcon={<FaTrashCan />}
-                            />
-                        </div>
+                        <ListButton variant="danger" aria-label="Delete gift"
+                            onClick={() => {
+                                if (item.itemID) {
+                                    deleteItem?.(item.itemID);
+                                }
+                            }}
+                            buttonIcon={<FaTrashCan />}
+                        />
                     </div>
                 </div>
             </div>
-        </>
-    )
-}
-
+        </article>
+    );
+};
 
 export default ItemElement;
-

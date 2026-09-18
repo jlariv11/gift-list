@@ -3,11 +3,5 @@ type NotificationProps = {
 }
 
 export default function Notification({ text }: NotificationProps) {
-    return (
-        <div className="rounded-xl p-4 bg-orange-400 text-gray-800">
-            {text}
-        </div>
-    );
+    return (<div className=" rounded-lg border border-primary-light bg-primary-light px-4 py-3 text-sm text-primary">{text}</div>);
 }
-
-
