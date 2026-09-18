@@ -14,11 +14,30 @@ export interface Item {
     itemDescription: string;
 }
 
-export async function saveList(listProps: ListProps) {
+export async function createList(listName: string) {
     const token = await getAccessToken();
-    const data: {ownerID: string, itemIDs: number[]} = (
+    const data = (await axios.post(ROUTES.CREATE_LIST, {listName: listName}, {
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    })).data;
+    return data;
+}
+
+export async function updateListName(listData: {ownerID: string, listName: string}) {
+    const token = await getAccessToken();
+    await axios.post(ROUTES.UPDATE_LIST_NAME, listData, {
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    });
+}
+
+export async function saveItems(listProps: {ownerID: string, items: Item[]}) {
+    const token = await getAccessToken();
+    const data: {itemIDs: number[]} = (
         await axios.post(
-            ROUTES.SAVE_LIST,
+            ROUTES.SAVE_ITEMS,
             listProps,
             {
                 headers: {
@@ -26,15 +45,27 @@ export async function saveList(listProps: ListProps) {
                 },
             }
             )).data;
-    return data;
+    data.itemIDs.forEach((itemID, index) => {
+        listProps.items[index].itemID = itemID;
+    })
 }
 
 export async function saveSharedList(listProps: ListProps) {
     await axios.post(ROUTES.SAVE_PURCHASES, listProps);
 }
 
-export async function deleteItems(itemIDs: number[]) {
-    await axios.delete(ROUTES.DELETE_ITEMS, {data: {itemIDs}});
+export async function deleteItems(itemIDs: number[], ownerID: string) {
+    const token = await getAccessToken();
+
+    await axios.delete(ROUTES.DELETE_ITEMS, {
+        data: {
+            ownerID,
+            itemIDs
+        },
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    });
 }
 
 export async function deleteList(ownerID: string) {

@@ -27,6 +27,11 @@ export async function getShareID(ownerID: string){
     return data.shareID;
 }
 
+export async function createShareID(ownerID: string){
+    const data = (await axios.post(ROUTES.CREATE_SHAREID, {ownerID})).data;
+    return data.shareID;
+}
+
 export async function loadViewList(shareID: string, shareVisitor: string | undefined){
     const data = (await axios.get(ROUTES.GET_LIST, {params: {shareID: shareID}})).data;
     const listData: ListData = {

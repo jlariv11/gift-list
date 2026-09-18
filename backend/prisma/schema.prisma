@@ -19,12 +19,13 @@ model Item {
 }
 
 model List {
-  ownerID    String       @id
-  shareID    String?      @unique
-  auth0Sub   String?
-  listName   String       @default("List")
-  Item       Item[]
-  SharedList SharedList[]
+  ownerID         String       @id
+  shareID         String?      @unique
+  auth0Sub        String?
+  listName        String       @default("List")
+  onlyThisAccount Boolean      @default(false)
+  Item            Item[]
+  SharedList      SharedList[]
 }
 
 model SharedList {

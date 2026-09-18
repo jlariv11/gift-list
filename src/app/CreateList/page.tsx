@@ -1,16 +1,17 @@
 "use client"
-import {useContext, useEffect, useState} from "react";
-import {deleteItems, deleteList, Item, saveList} from "../database/SaveList";
+import {useContext, useEffect, useRef, useState} from "react";
+import {createList, deleteItems, deleteList, Item, saveItems, updateListName} from "../database/SaveList";
 import ItemElement from "../elements/ItemElement";
 import ListButton from "../elements/ListButton";
 import ListInput from "../elements/ListInput";
 import CreateItem from "../components/CreateItem";
 import {useSearchParams} from "next/navigation";
 import Notification from "../components/Notification";
-import {getShareID, loadEditList} from "../database/LoadList";
+import {createShareID, getShareID, loadEditList} from "../database/LoadList";
 import {SessionContext} from "../SessionContext";
 import Modal from "../components/Modal";
 import WarningModal from "../components/WarningModal";
+import {getAccessToken} from "@/app/Helper";
 
 export interface ListProps {
     listName: string;
@@ -20,8 +21,9 @@ export interface ListProps {
 }
 
 export default function CreateList() {
-    const [listName, setListName] = useState('');
+    const [listName, setListName] = useState("Untitled List");
     const [items, setItems] = useState<Item[]>([]);
+    const [dirtyItems, setDirtyItems] = useState<Item[]>([]);
     const [showAddItem, setShowAddItem] = useState(false);
     const [showEditItem, setShowEditItem] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -36,6 +38,8 @@ export default function CreateList() {
 
     const searchParams = useSearchParams();
     const session = useContext(SessionContext);
+    const hasInitialized = useRef(false);
+
 
     function linkFromID(edit: boolean): string {
         if (edit && !ownerID) {
@@ -52,6 +56,11 @@ export default function CreateList() {
 
 
     useEffect(() => {
+
+        if (hasInitialized.current)
+            return;
+        hasInitialized.current = true;
+
         const ownerID = searchParams?.get("owner");
         if(ownerID) {
             loadEditList(ownerID).then((listData) => {
@@ -63,46 +72,51 @@ export default function CreateList() {
         }else{
             setNewList(true);
             setCopiedEditLink(false);
+            createList(listName).then(id => setOwnerID(id));
+            getAccessToken().then(accessToken => {
+                if (accessToken) {
+                    setCopiedEditLink(true);
+                }
+            })
         }
     }, []);
 
     async function listChanged(){
         const listData = {
-            listName: listName,
             ownerID: ownerID,
-            newList: newList, // Only want to give ownership if it's a new list
-            shareID: shareID,
-            items: items,
+            items: dirtyItems,
         }
-        const data = await saveList(listData);
-        if(newList){
-            setOwnerID(data.ownerID);
-            setNewList(false);
-        }
-        setItems(prevItems =>
-            prevItems.map((item, i) => ({
-                ...item,
-                itemID: data.itemIDs[i],
-            }))
-        );
+        await saveItems(listData);
+        setItems([...items, ...dirtyItems]);
+        setDirtyItems([]);
+        toggleChangesSaved();
     }
 
     useEffect(() => {
-        if(items.length > 0) {
+        if(dirtyItems.length > 0) {
             listChanged();
         }
-    }, [items]);
+    }, [dirtyItems]);
+
+    useEffect(() => {
+        if (!ownerID || !listName)
+            return;
+        const listData = {
+            listName: listName,
+            ownerID: ownerID,
+        }
+        updateListName(listData);
+    }, [listName]);
 
     function addItem(item: Item) {
-        setItems([...items, item]);
-        toggleChangesSaved();
+        setDirtyItems([...dirtyItems, item])
     }
 
     async function handleGetShareID(){
         if(!ownerID){
             return;
         }
-        const id = await getShareID(ownerID);
+        const id = await createShareID(ownerID);
         setShareID(id);
     }
 
@@ -123,15 +137,14 @@ export default function CreateList() {
             item.itemDescription = itemData.itemDescription;
             item.itemImageFile = itemData.itemImageFile;
             setEditData(undefined);
-            listChanged();
-            toggleChangesSaved();
+            addItem(item);
+            setItems(items.filter(i => i.itemID !== item.itemID));
         }
     }
 
     async function deleteItem(itemID: number) {
-        await deleteItems([itemID]);
+        await deleteItems([itemID], ownerID);
         setItems(items.filter(i => i.itemID !== itemID));
-        toggleChangesSaved();
 
     }
 
@@ -165,7 +178,7 @@ export default function CreateList() {
                     <h1 className={"text-4xl"}>{newList ? "Create New" : "Edit"} List</h1>
                     <div className={"flex justify-between pb-4 border-4 rounded-md border-gray-400 p-4 bg-gray-300"}>
                         <ListInput label={'List Name: '} type={'text'} value={listName} onChange={(e) => setListName(e.target.value)} onBlur={() => {listChanged(); toggleChangesSaved();}}/>
-                        <div hidden={copiedEditLink || !ownerID} className={"pb-4 border-4 rounded-md border-black font-bold p-4 bg-red-600 text-white"}>Please copy the edit link at the bottom to be able to return and edit your list.</div>
+                        <div hidden={copiedEditLink} className={"pb-4 border-4 rounded-md border-black font-bold p-4 bg-red-600 text-white"}>Please copy the edit link at the bottom to be able to return and edit your list.</div>
                     </div>
                     <div className={"h-108 overflow-y-auto border-4 rounded-md border-gray-400 p-4 bg-gray-300"}>
                         {items.map((item, index) => <ItemElement key={index} item={item} editItem={fetchEditItem} deleteItem={deleteItem} />)}

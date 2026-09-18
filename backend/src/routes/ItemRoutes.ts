@@ -1,34 +1,77 @@
 import { Router } from "express";
 import prismaClient from "../database/prisma";
+import {optionalAccessToken} from "../middleware/auth0";
 
 const router = Router();
 
-router.delete("/", async (req, res) => {
-    const { itemIDs } = req.body;
+export interface Item {
+    itemID: number | undefined;
+    itemName: string;
+    itemQuantity: number;
+    itemQuantityPurchased: number | undefined;
+    itemLink: string;
+    itemImageURL: string | null;
+    itemImageFile: FormData | undefined;
+    itemDescription: string;
+}
 
-    if (!Array.isArray(itemIDs)) {
-        return res.status(400).json({
-            error: "itemIDs must be an array"
-        });
-    }
+router.post("/save", optionalAccessToken, async (req, res) => {
+    const auth0Sub = req.auth?.payload?.sub ?? null;
+    const ownerID = req.body.ownerID ?? null;
+    const items = req.body.items;
 
-    try {
-        await prismaClient.item.deleteMany({
+    if (!ownerID)
+        return res.status(500).json({error: "Owner ID does not exist"});
+
+    const result = await prismaClient.$transaction(async (tx) => {
+        const updatedItems = await Promise.all(
+            items.map((item: Item) =>
+                tx.item.upsert({
+                    where: {
+                        itemID: item.itemID ?? -1,
+                    },
+                    update: {
+                        itemName: item.itemName,
+                        itemQuantity: item.itemQuantity,
+                        itemLink: item.itemLink,
+                        itemImageURL: item.itemImageURL,
+                        itemDescription: item.itemDescription,
+                    },
+                    create: {
+                        ownerID: ownerID,
+                        itemName: item.itemName,
+                        itemQuantity: item.itemQuantity,
+                        itemLink: item.itemLink,
+                        itemImageURL: item.itemImageURL,
+                        itemDescription: item.itemDescription,
+                    },
+                })
+            )
+        );
+
+        return updatedItems;
+    });
+
+    return res.status(200).json({
+        itemIDs: result.map(item => item.itemID),
+    });
+})
+
+router.delete("/delete", optionalAccessToken, async (req, res) => {
+    const auth0Sub = req.auth?.payload?.sub ?? null;
+    const { ownerID, itemIDs } = req.body;
+
+    await prismaClient.$transaction(async (tx) => {
+        await tx.item.deleteMany({
             where: {
                 itemID: {
-                    in: itemIDs
-                }
-            }
-        });
-
-        res.status(200).json({});
-    } catch (err) {
-        console.error(err);
-
-        res.status(500).json({
-            error: "Failed to delete items"
-        });
-    }
-});
+                    in: itemIDs,
+                },
+                ownerID: ownerID,
+            },
+        })
+    });
+    return res.status(200).json("items deleted successfully.");
+})
 
 export default router;
