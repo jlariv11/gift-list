@@ -11,6 +11,7 @@ import {FaArrowRight, FaLink, FaPlus, FaTrashCan, FaUserGroup} from "react-icons
 import {deleteList, removeSharedList} from "../database/SaveList";
 import WarningModal from "../components/WarningModal";
 import { useRouter } from "next/navigation";
+import {getAccessToken, hasAccessToken} from "@/app/Helper";
 
 interface ListProps {
     ownerID: string;
@@ -20,32 +21,25 @@ interface ListProps {
 
 interface SharedListProps {
     sharedListName: string;
-    accountSharedTo: string;
-    id: number;
     shareID: string;
 }
 
 type ListModalProps = {
-    session: SessionData | null;
     updateLists: () => void;
     setAddListModal: (modalToggle: boolean) => void;
 };
 
-const ListModal = ({session, updateLists, setAddListModal}: ListModalProps) => {
+const ListModal = ({updateLists, setAddListModal}: ListModalProps) => {
     const [link, setLink] = useState("");
 
     function submit() {
-        if (!session?.user.email) {
-            return;
-        }
-
         if (link.includes("owner")) {
             addUserToList(link).then(() => {
                 updateLists();
                 setAddListModal(false);
             });
         } else if (link.includes("share")) {
-            addUserToSharedList(link, session.user.email).then(() => {
+            addUserToSharedList(link).then(() => {
                 updateLists();
                 setAddListModal(false);
             });
@@ -86,7 +80,7 @@ const ListModal = ({session, updateLists, setAddListModal}: ListModalProps) => {
 };
 
 export default function AccountPage() {
-    const session = useContext(SessionContext);
+    const [accessToken, setHasAccessToken] = useState(false);
 
     const [lists, setLists] = useState<ListProps[]>([]);
     const [sharedLists, setSharedLists] = useState<SharedListProps[]>([]);
@@ -101,6 +95,15 @@ export default function AccountPage() {
 
     const router = useRouter();
 
+    useEffect(() => {
+        hasAccessToken().then(hasToken => {
+            if(hasToken){
+                setHasAccessToken(hasToken);
+                updateLists();
+            }
+        })
+    }, []);
+
     function linkFromID(id: string, edit: boolean): string {
         const baseUrl = window.location.origin;
         const param = edit ? `owner=${id}` : `share=${id}`;
@@ -113,20 +116,15 @@ export default function AccountPage() {
     }
 
     function updateLists() {
-        if (session?.user.email) {
-            getUserListInfo().then((info) => {
-                setLists(info);
-            });
+        getUserListInfo().then((info) => {
+            setLists(info);
+        });
 
-            getUserSharedListInfo(session.user.email).then((info) => {
-                setSharedLists(info);
-            });
-        }
+        getUserSharedListInfo().then((info) => {
+            setSharedLists(info);
+        });
+
     }
-
-    useEffect(() => {
-        updateLists();
-    }, []);
 
     function handleLogout() {
         window.location.href = "auth/logout";
@@ -150,10 +148,9 @@ export default function AccountPage() {
         }
 
         if (listToDelete.shared) {
-            if (session?.user.email) {
+            if (accessToken) {
                 removeSharedList(
                     listToDelete.id,
-                    session.user.email
                 );
 
                 setSharedLists(
@@ -231,14 +228,14 @@ export default function AccountPage() {
                                     text-foreground
                                 "
                             >
-                                {session?.user.name
-                                    ? `Welcome, ${session.user.name}`
+                                {accessToken
+                                    ? `Welcome, ${"Figure this out later"}`
                                     : "Welcome"}
                             </h1>
 
-                            {session?.user.email && (
+                            {accessToken && (
                                 <p className="mt-2 text-sm text-muted">
-                                    {session.user.email}
+                                    {"figure this out later"}
                                 </p>
                             )}
                         </div>
@@ -369,6 +366,7 @@ export default function AccountPage() {
                                                             text-base
                                                             font-semibold
                                                             text-foreground
+                                                            cursor-default
                                                         "
                                                     >
                                                         {list.listName}
@@ -379,6 +377,7 @@ export default function AccountPage() {
                                                             mt-1
                                                             text-xs
                                                             text-muted
+                                                            cursor-default
                                                         "
                                                     >
                                                         Your list
@@ -405,6 +404,7 @@ export default function AccountPage() {
                                                         transition-colors
                                                         hover:bg-danger-light
                                                         hover:text-danger
+                                                        cursor-pointer
                                                     "
                                                 >
                                                     <FaTrashCan className="text-sm" />
@@ -443,6 +443,7 @@ export default function AccountPage() {
                                                         text-muted
                                                         transition-colors
                                                         hover:text-primary
+                                                        cursor-pointer
                                                     "
                                                 >
                                                     <FaLink />
@@ -469,6 +470,7 @@ export default function AccountPage() {
                                                             text-muted
                                                             transition-colors
                                                             hover:text-primary
+                                                            cursor-pointer
                                                         "
                                                     >
                                                         <FaUserGroup />
@@ -496,6 +498,7 @@ export default function AccountPage() {
                                                         text-primary
                                                         transition-colors
                                                         hover:text-primary-hover
+                                                        cursor-pointer
                                                     "
                                                 >
                                                     Open
@@ -711,7 +714,6 @@ export default function AccountPage() {
                     showModalToggle={setAddListModal}
                     modalBody={
                         <ListModal
-                            session={session}
                             setAddListModal={setAddListModal}
                             updateLists={updateLists}
                         />

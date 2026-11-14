@@ -10,7 +10,23 @@ export async function getAccessToken() {
     return data.token;
 }
 
+export async function getOrIgnoreAccessToken(){
+    const response = await fetch("/auth/access-token");
+
+    if (!response.ok) {
+        return null;
+    }
+
+    const data = await response.json();
+
+    return data.token;
+}
+
 export async function hasAccessToken() {
-    const token = await getAccessToken();
-    return !!token;
+    try{
+        const token = await getAccessToken();
+        return !!token;
+    } catch(error){
+        return false; // if there is an error no key was retrieved
+    }
 }

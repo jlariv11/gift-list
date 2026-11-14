@@ -1,7 +1,7 @@
 import axios from "axios";
 import {ROUTES} from "../APIRoutes";
 import {ListProps} from "../CreateList/page";
-import {getAccessToken} from "@/app/Helper";
+import {getAccessToken, getOrIgnoreAccessToken} from "@/app/Helper";
 
 export interface Item {
     itemID: number | undefined;
@@ -14,34 +14,31 @@ export interface Item {
 }
 
 export async function createList(listName: string) {
-    const token = await getAccessToken();
+    const token = await getOrIgnoreAccessToken();
+    const headers = token ? {Authorization: `Bearer ${token}`} : {};
     const data = (await axios.post(ROUTES.CREATE_LIST, {listName: listName}, {
-        headers: {
-            Authorization: `Bearer ${token}`
-        }
+        headers: headers,
     })).data;
     return data;
 }
 
 export async function updateListName(listData: {ownerID: string, listName: string}) {
-    const token = await getAccessToken();
+    const token = await getOrIgnoreAccessToken();
+    const headers = token ? {Authorization: `Bearer ${token}`} : {};
     await axios.post(ROUTES.UPDATE_LIST_NAME, listData, {
-        headers: {
-            Authorization: `Bearer ${token}`
-        }
+        headers: headers
     });
 }
 
 export async function saveItems(listProps: {ownerID: string, items: Item[]}) {
-    const token = await getAccessToken();
+    const token = await getOrIgnoreAccessToken();
+    const headers = token ? {Authorization: `Bearer ${token}`} : {};
     const data: {itemIDs: number[]} = (
         await axios.post(
             ROUTES.SAVE_ITEMS,
             listProps,
             {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
+               headers: headers
             }
             )).data;
     data.itemIDs.forEach((itemID, index) => {
@@ -68,9 +65,17 @@ export async function deleteItems(itemIDs: number[], ownerID: string) {
 }
 
 export async function deleteList(ownerID: string) {
-    await axios.delete(ROUTES.DELETE_LIST, {data: {ownerID}})
+    const token = await getAccessToken();
+    await axios.delete(ROUTES.DELETE_LIST, {data: {ownerID}, headers: {
+            Authorization: `Bearer ${token}`,
+        }})
 }
 
-export async function removeSharedList(shareID: string, auth0Owner:string) {
-    await axios.delete(ROUTES.REMOVE_SHARED_LIST, {data: {shareID, auth0Owner}})
+export async function removeSharedList(shareID: string) {
+    const token = await getAccessToken();
+    await axios.delete(ROUTES.REMOVE_SHARED_LIST, {data: {shareID},
+        headers: {
+            Authorization: `Bearer ${token}`,
+        }
+    })
 }

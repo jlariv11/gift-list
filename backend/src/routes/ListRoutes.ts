@@ -35,19 +35,31 @@ router.post("/", optionalAccessToken, async (req, res) => {
 });
 
 router.post("/updateName", async (req, res) => {
-    //const auth0Sub = req.auth?.payload?.sub ?? null;
+    const auth0Sub = req.auth?.payload?.sub ?? null;
     const listName = req.body.listName ?? "Untitled List1";
     const ownerID = req.body.ownerID ?? null;
     try {
-        const list = await prismaClient.list.update({
-            where: {
-                ownerID: ownerID,
-            },
-            data: {
-                listName: listName,
+        await prismaClient.$transaction(async (tx) => {
+            const accessToken = await tx.list.findUnique(
+                {
+                    where: { ownerID },
+                    select: {
+                        auth0Sub: true,
+                    }
+                });
+            if (accessToken && accessToken.auth0Sub !== auth0Sub) {
+                throw new Error("Unauthorized.");
             }
-        });
-        return res.status(200).json(list.listName);
+            const list = await tx.list.update({
+                where: {
+                    ownerID: ownerID,
+                },
+                data: {
+                    listName: listName,
+                }
+            });
+            return res.status(200).json(list.listName);
+        })
     } catch (error) {
         console.error(error);
         return res.status(500).json({
@@ -58,13 +70,22 @@ router.post("/updateName", async (req, res) => {
 
 router.get("/load", async (req, res) => {
     const ownerID = typeof req.query.ownerID === "string" ? req.query.ownerID : null;
-    if (!ownerID)
-        return res.status(500).json({error: "Owner ID does not exist"});
+    const shareID = typeof req.query.shareID === "string" ? req.query.shareID : null;
+    if (!ownerID && !shareID)
+        return res.status(500).json({error: "Owner or Share ID does not exist"});
     try {
-        const listData = await prismaClient.list.findUnique({
-            where: { ownerID: ownerID },
-            include: { Item: true },
-        })
+        let listData = null
+        if(ownerID) {
+            listData = await prismaClient.list.findUnique({
+                where: {ownerID: ownerID},
+                include: {Item: true},
+            })
+        }else if(shareID) {
+            listData = await prismaClient.list.findUnique({
+                where: {shareID: shareID},
+                include: {Item: true},
+            })
+        }
         return res.status(200).json(listData);
     }catch(error) {
         console.error(error);
@@ -124,19 +145,68 @@ router.delete("/delete", optionalAccessToken, async (req, res) => {
     const auth0Sub = req.auth?.payload?.sub ?? null;
     const { ownerID } = req.body;
 
-    await prismaClient.$transaction(async (tx) => {
-        await tx.item.deleteMany({
-            where: {
-                ownerID: ownerID,
-            },
+    if (!ownerID) {
+        return res.status(400).json({ error: "ownerID is required." });
+    }
+
+    try {
+        await prismaClient.$transaction(async (tx) => {
+            const list = await tx.list.findUnique({
+                where: {
+                    ownerID: ownerID,
+                },
+                select: {
+                    auth0Sub: true,
+                    shareID: true,
+                }
+            });
+
+            if (!list) {
+                throw new Error("List not found.");
+            }
+
+            // Reject if the list belongs to a different authenticated user
+            if (list.auth0Sub && list.auth0Sub !== auth0Sub) {
+                throw new Error("Unauthorized.");
+            }
+
+            await tx.item.deleteMany({
+                where: {
+                    ownerID: ownerID,
+                },
+            });
+
+            // Delete any attached shared lists
+            if(list.shareID) {
+                await tx.sharedList.deleteMany({
+                    where: {
+                        shareID: list.shareID,
+                    },
+                });
+            }
+
+            await tx.list.delete({
+                where: {
+                    ownerID: ownerID,
+                },
+            });
         });
-        await tx.list.delete({
-            where: {
-                ownerID: ownerID,
-            },
-        });
-    });
-    return res.status(200).json("list deleted successfully.");
-})
+
+        return res.status(200).json("List deleted successfully.");
+
+    } catch (error) {
+        if (error instanceof Error) {
+            if (error.message === "Unauthorized.") {
+                return res.status(403).json({ error: error.message });
+            }
+
+            if (error.message === "List not found.") {
+                return res.status(404).json({ error: error.message });
+            }
+        }
+
+        return res.status(500).json({ error: "Failed to delete list." });
+    }
+});
 
 export default router;

@@ -36,7 +36,7 @@ export default function ShareList() {
 
 
     async function fetchList(shareID: string) {
-        const listData = await loadViewList(shareID, session ? session.user.email : undefined);
+        const listData = await loadViewList(shareID);
         setListName(listData.listName);
         setItems(listData.items);
         setShareID(listData.shareID);
@@ -141,6 +141,7 @@ export default function ShareList() {
             {showModal && <Modal modalTitle={"Purchase these Items?"} modalDivID={"modal"} modalBody={<WarningModal toggleModal={setShowModal} warning={"This will mark these items as purchased and will make these items unavailable to purchase by others. Do you want to continue?"} actionFunction={saveItems} />} showModalToggle={setShowModal} />}
             {showLearningModal &&
                 <Modal
+                    ignoreBlur={true}
                     modalTitle={"Tutorial"}
                     modalDivID={"modal"}
                     showModalToggle={setShowLearningModal}

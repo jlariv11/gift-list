@@ -13,7 +13,7 @@ import Notification from "../components/Notification";
 import {createShareID, loadEditList} from "../database/LoadList";
 import Modal from "../components/Modal";
 import WarningModal from "../components/WarningModal";
-import { getAccessToken } from "@/app/Helper";
+import {getAccessToken, hasAccessToken} from "@/app/Helper";
 
 import {FaPlus, FaLink, FaPen, FaTrashCan, FaArrowRotateRight} from "react-icons/fa6";
 
@@ -83,12 +83,7 @@ export default function CreateList() {
             setCopiedEditLink(false);
 
             createList(listName).then((id) => setOwnerID(id));
-
-            getAccessToken().then((accessToken) => {
-                if (accessToken) {
-                    setCopiedEditLink(true);
-                }
-            });
+            hasAccessToken().then(setCopiedEditLink);
         }
     }, []);
 

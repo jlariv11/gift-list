@@ -8,6 +8,7 @@ interface ModalProps {
     showModalToggle: (modalToggle: boolean) => void;
     closeActions?: () => void;
     position?: "top" | "bottom" | "left" | "right" | "";
+    ignoreBlur?: boolean;
 }
 
 function createModalContent(props: ModalProps) {
@@ -33,7 +34,7 @@ function createModalContent(props: ModalProps) {
     }
 
     return (
-        <div className={` fixed inset-0 z-50 flex ${getModalPosition()} bg-black/30 p-4 backdrop-blur-[2px] `} onClick={closeModal}>
+        <div className={` fixed inset-0 z-50 flex ${getModalPosition()} bg-black/30 p-4 ${props.ignoreBlur ? "" : "backdrop-blur-[2px]"} `} onClick={closeModal}>
             <div className=" w-full max-w-2xl overflow-hidden rounded-xl border border-border bg-surface shadow-xl" onClick={(e) => e.stopPropagation()}>
                 {/* Header */}
                 <div className=" flex items-center justify-between border-b border-border px-6 py-4">

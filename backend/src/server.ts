@@ -1,6 +1,7 @@
 import express from "express"
 import itemRoutes from "./routes/ItemRoutes";
 import listRoutes from "./routes/ListRoutes";
+import userRoutes from "./routes/UserRoutes";
 import cors from "cors"
 const app = express();
 const port = process.env.PORT || 8080;
@@ -14,6 +15,7 @@ app.use(cors({
 app.use(express.json());
 app.use("/api/items", itemRoutes);
 app.use("/api/lists", listRoutes);
+app.use("/api/user", userRoutes);
 
 app.get("/health", async (req, res) => {
     res.status(200).send("Odsdsd");

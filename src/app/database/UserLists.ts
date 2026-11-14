@@ -14,10 +14,13 @@ export async function getUserListInfo() {
     ).data;
 }
 
-export async function getUserSharedListInfo(auth0Owner: string) {
+export async function getUserSharedListInfo() {
+    const token = await getAccessToken();
     return (
         await axios.get(ROUTES.GET_USER_SHARE_LISTS, {
-            params: { auth0Owner }
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
         })
     ).data;
 }
@@ -40,11 +43,19 @@ export async function addUserToList(link: string) {
     ).data;
 }
 
-export async function addUserToSharedList(link: string, auth0Owner: string) {
+export async function addUserToSharedList(link: string) {
+    const token = await getAccessToken();
     return (
-        await axios.post(ROUTES.SET_USER_SHARE_LIST, {
-            auth0Owner,
-            shareID: link.split("share=")[1]
-        })
+        await axios.post(
+            ROUTES.SET_USER_SHARE_LIST,
+            {
+                shareID: link.split("share=")[1],
+            },
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            }
+        )
     ).data;
 }

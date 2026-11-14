@@ -21,3 +21,21 @@ export function optionalAccessToken(
     // Token provided → validate it
     return validateAccessToken(req, res, next);
 }
+
+export function requiredAccessToken(
+    req: Request,
+    res: Response,
+    next: NextFunction
+) {
+    const authorization = req.get("Authorization");
+
+    if (!authorization) {
+        return res.status(401).json({
+            error: "Unauthorized",
+            message: "Access token is required"
+        });
+    }
+
+    // Token provided → validate it
+    return validateAccessToken(req, res, next);
+}
