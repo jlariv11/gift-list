@@ -302,7 +302,7 @@ export default function CreateList() {
                                 </div>
 
                                 {shareID ?
-                                    (<ListButton variant="secondary" buttonText="Copy link" buttonIcon={<FaLink />} onClick={() => addToClipboard(linkFromID(false))}/>)
+                                    (<ListButton variant="secondary" buttonText="Copy share link" buttonIcon={<FaLink />} onClick={() => addToClipboard(linkFromID(false))}/>)
                                     :
                                     (<ListButton variant="secondary" buttonText="Create share link" buttonIcon={<FaLink />} onClick={handleGetShareID}/>)}
                             </div>

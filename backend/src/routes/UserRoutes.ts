@@ -114,6 +114,15 @@ router.post("/setusersharelist", requiredAccessToken, async (req, res) => {
         return res.status(401).json({error: "No access token provided to link."});
     }
     try {
+        const connectedKey = await prismaClient.sharedList.findFirst({
+            where: {
+                accountSharedTo: auth0Sub,
+                shareID: shareID
+            }
+        })
+        if(connectedKey){
+            return res.status(200).json("User already connected to list");
+        }
         const list = await prismaClient.sharedList.create({
             data: {
                 accountSharedTo: auth0Sub,
@@ -121,7 +130,7 @@ router.post("/setusersharelist", requiredAccessToken, async (req, res) => {
             }
         });
 
-        return res.status(200).json(list);
+        return res.status(201).json(list);
     } catch (error) {
         console.error(error);
         return res.status(500).json({

@@ -1,6 +1,7 @@
 import { Router } from "express";
 import prismaClient from "../database/prisma";
 import {optionalAccessToken} from "../middleware/auth0";
+import {nanoid} from "nanoid";
 
 const router = Router();
 
@@ -56,6 +57,38 @@ router.post("/save", optionalAccessToken, async (req, res) => {
         itemIDs: result.map(item => item.itemID),
     });
 })
+
+
+router.post("/savepurchases", async (req, res) => {
+    const shareID = req.body.shareID ?? null;
+    const items = req.body.items;
+    try {
+        await prismaClient.$transaction(async (tx) => {
+            const ownerID = await tx.list.findUnique({ where: { shareID }, select: {ownerID: true} });
+            if (!ownerID || !ownerID.ownerID)
+                throw new Error("Owner ID does not exist for given shareID");
+
+            for (const item of items){
+                await tx.item.update({
+                    where: {
+                        ownerID: ownerID.ownerID,
+                        itemID: item.itemID
+                    },
+                    data: {
+                        itemQuantityPurchased: item.itemQuantityPurchased
+                    }
+                })
+            }
+
+        })
+        return res.status(200).json("items updated successfully");
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            error: "Failed to create list",
+        });
+    }
+});
 
 router.delete("/delete", optionalAccessToken, async (req, res) => {
     const auth0Sub = req.auth?.payload?.sub ?? null;

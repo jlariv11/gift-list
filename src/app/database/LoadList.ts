@@ -1,7 +1,7 @@
 import axios from "axios";
 import {Item} from "./SaveList";
 import {ROUTES} from "../APIRoutes";
-import {getAccessToken} from "@/app/Helper";
+import {getAccessToken, getOrIgnoreAccessToken} from "@/app/Helper";
 
 export interface ListData {
     ownerID: string;
@@ -30,13 +30,11 @@ export async function getShareID(ownerID: string){
 
 export async function createShareID(ownerID: string){
     const data = (await axios.post(ROUTES.CREATE_SHAREID, {ownerID})).data;
-    console.log(data.shareID);
-    console.log(data)
     return data.shareID;
 }
 
 export async function loadViewList(shareID: string){
-    const token = await getAccessToken();
+    const token = await getOrIgnoreAccessToken();
     const data = (await axios.get(ROUTES.GET_LIST, {params: {shareID: shareID}})).data;
     const listData: ListData = {
         ownerID: data.ownerID,
@@ -45,8 +43,14 @@ export async function loadViewList(shareID: string){
         listName: data.listName,
         items: data.Item,
     }
+    // If a user is logged in and visits a shared list automatically add it to their account for easy access
     if(token) {
-        //TODO: await axios.post(ROUTES.SET_USER_SHARE_LIST, {data: {shareVisitor, shareID}});
+        await axios.post(ROUTES.SET_USER_SHARE_LIST, {shareID},
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
     }
     return listData;
 }

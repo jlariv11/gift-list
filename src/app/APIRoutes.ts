@@ -12,7 +12,7 @@ export const ROUTES = {
     SAVE_ITEMS: `${API_URL}/api/items/save`,
     CREATE_LIST: `${API_URL}/api/lists/`,
     UPDATE_LIST_NAME: `${API_URL}/api/lists/updateName`,
-    SAVE_PURCHASES: `${API_URL}/api/lists/savepurchases`,
+    SAVE_PURCHASES: `${API_URL}/api/items/savepurchases`,
     DELETE_ITEMS: `${API_URL}/api/items/delete`,
     SAVE_IMAGES: `${API_URL}/api/items/saveimages`,
     DELETE_LIST: `${API_URL}/api/lists/delete`,

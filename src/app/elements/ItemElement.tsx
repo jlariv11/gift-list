@@ -19,9 +19,14 @@ const ItemElement = ({item, editItem, deleteItem, updatePurchaseCount, shareTuto
     return editItem ? (<EditItemElement item={item} editItem={editItem} deleteItem={deleteItem}/>) : (<ViewItemElement item={item} updatePurchaseCount={updatePurchaseCount} shareTutorialState={shareTutorialState}/>);
 };
 const ViewItemElement = ({item, updatePurchaseCount, shareTutorialState}: ItemElementProps) => {
-    const [localQuantityPurchased, setLocalQuantityPurchased] = useState(item.itemQuantityPurchased ?? 0);
+    const [localQuantityPurchased, setLocalQuantityPurchased] = useState(0);
 
-    const multiQuantityItem = item.itemQuantity > 1 || (item.itemQuantityPurchased !== undefined && item.itemQuantity - item.itemQuantityPurchased > 1);
+    const availableQuantity = Math.max(
+        0,
+        item.itemQuantity - (item.itemQuantityPurchased ?? 0)
+    );
+
+    const multiQuantityItem = availableQuantity > 1;
 
     const [itemMarkedForPurchase, setItemMarkedForPurchase] = useState(false);
 
@@ -110,8 +115,8 @@ const ViewItemElement = ({item, updatePurchaseCount, shareTutorialState}: ItemEl
                                             onClick={() => {
                                                 const quantity = clamp(
                                                     localQuantityPurchased - 1,
-                                                    item.itemQuantityPurchased ?? 0,
-                                                    item.itemQuantity
+                                                    1,
+                                                    availableQuantity
                                                 );
 
                                                 setLocalQuantityPurchased(quantity);
@@ -125,28 +130,16 @@ const ViewItemElement = ({item, updatePurchaseCount, shareTutorialState}: ItemEl
                                             <FaMinus className="text-xs" />
                                         </button>
 
-                                        <ListInput className=" w-12 border-0 bg-transparent px-1 py-1.5 text-center focus:ring-0" label="" type="number" value={localQuantityPurchased} min={item.itemQuantityPurchased} max={item.itemQuantity}
-                                            onChange={(e) => {
-                                                if (
-                                                    e.target.value === "" &&
-                                                    localQuantityPurchased === 0
-                                                ) {
-                                                    return;
-                                                }
+                                        <ListInput className=" w-12 border-0 bg-transparent px-1 py-1.5 text-center focus:ring-0" label="" type="number" value={localQuantityPurchased} min={1} max={availableQuantity}
+                                               onChange={(e) => {
+                                                   const checked = e.target.checked;
+                                                   setItemMarkedForPurchase(checked);
 
-                                                const quantity = Number(
-                                                    e.target.value
-                                                );
+                                                   const quantity = checked ? 1 : 0;
 
-                                                setLocalQuantityPurchased(
-                                                    quantity
-                                                );
-
-                                                updatePurchaseCount?.(
-                                                    item.itemID,
-                                                    quantity
-                                                );
-                                            }}
+                                                   setLocalQuantityPurchased(quantity);
+                                                   updatePurchaseCount?.(item.itemID, quantity);
+                                               }}
                                             onBlur={(e) => {
                                                 const quantity = clamp(
                                                     Number(e.target.value),
@@ -178,8 +171,8 @@ const ViewItemElement = ({item, updatePurchaseCount, shareTutorialState}: ItemEl
                                             onClick={() => {
                                                 const quantity = clamp(
                                                     localQuantityPurchased + 1,
-                                                    item.itemQuantityPurchased ?? 0,
-                                                    item.itemQuantity
+                                                    1,
+                                                    availableQuantity
                                                 );
 
                                                 setLocalQuantityPurchased(quantity);

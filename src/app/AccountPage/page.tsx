@@ -20,7 +20,7 @@ interface ListProps {
 }
 
 interface SharedListProps {
-    sharedListName: string;
+    listName: string;
     shareID: string;
 }
 
@@ -589,7 +589,7 @@ export default function AccountPage() {
                                                             text-foreground
                                                         "
                                                     >
-                                                        {list.sharedListName}
+                                                        {list.listName}
                                                     </h4>
 
                                                     <p
