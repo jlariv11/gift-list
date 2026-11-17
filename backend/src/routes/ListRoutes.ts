@@ -36,7 +36,7 @@ router.post("/", optionalAccessToken, async (req, res) => {
 
 router.post("/updateName", async (req, res) => {
     const auth0Sub = req.auth?.payload?.sub ?? null;
-    const listName = req.body.listName ?? "Untitled List1";
+    const listName = req.body.listName ?? "Untitled List";
     const ownerID = req.body.ownerID ?? null;
     try {
         await prismaClient.$transaction(async (tx) => {

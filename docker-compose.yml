@@ -38,5 +38,27 @@ services:
       timeout: 5s
       retries: 10
 
+  test-database:
+    image: postgres:17
+    container_name: gift-list-test-database
+
+    environment:
+      POSTGRES_USER: test
+      POSTGRES_PASSWORD: testpassword
+      POSTGRES_DB: giftlist_test
+
+    ports:
+      - "5433:5432"
+
+    volumes:
+      - gift-list-test-postgres-data:/var/lib/postgresql/data
+
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U test -d giftlist_test" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
 volumes:
   gift-list-postgres-data:
+  gift-list-test-postgres-data:
