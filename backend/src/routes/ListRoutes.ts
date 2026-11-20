@@ -1,143 +1,187 @@
 import { Router } from "express";
 import prismaClient from "../database/prisma";
 import {nanoid} from "nanoid";
-import {optionalAccessToken, validateAccessToken} from "../middleware/auth0";
-import prisma from "../database/prisma";
+import {optionalAccessToken} from "../middleware/auth0";
+import {ApiError, handleApiError} from "../utils/APIResponse";
+import {checkListAccess} from "../utils/AccessKeyCheck";
 
 const router = Router();
 
-interface ItemData {
-    itemName: string;
-    itemQuantity: number;
-    itemLink?: string;
-    itemImageURL?: string;
-    itemDescription?: string;
-}
-
 router.post("/", optionalAccessToken, async (req, res) => {
     const auth0Sub = req.auth?.payload?.sub ?? null;
-    const listName = req.body.listName ?? "Untitled List1";
+    const listName = req.body?.listName ?? "Untitled List";
+
+    if (typeof listName !== "string" || !listName.trim()) {
+        return res.status(400).json({
+            error: "A valid listName is required.",
+        });
+    }
+
     try {
         const list = await prismaClient.list.create({
             data: {
                 ownerID: nanoid(),
-                listName: listName,
+                listName: listName.trim(),
                 auth0Sub: auth0Sub,
             }
         });
-        return res.status(201).json(list.ownerID);
+        return res.status(201).json({ownerID: list.ownerID});
     } catch (error) {
-        console.error(error);
-        return res.status(500).json({
-            error: "Failed to create list",
-        });
+        return handleApiError(res, error);
     }
 });
 
-router.post("/updateName", async (req, res) => {
+router.patch("/:ownerID", optionalAccessToken, async (req, res) => {
     const auth0Sub = req.auth?.payload?.sub ?? null;
-    const listName = req.body.listName ?? "Untitled List";
-    const ownerID = req.body.ownerID ?? null;
-    try {
-        await prismaClient.$transaction(async (tx) => {
-            const accessToken = await tx.list.findUnique(
-                {
-                    where: { ownerID },
-                    select: {
-                        auth0Sub: true,
-                    }
-                });
-            if (accessToken && accessToken.auth0Sub !== auth0Sub) {
-                throw new Error("Unauthorized.");
-            }
-            const list = await tx.list.update({
-                where: {
-                    ownerID: ownerID,
-                },
-                data: {
-                    listName: listName,
-                }
-            });
-            return res.status(200).json(list.listName);
-        })
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json({
-            error: "Failed to update list name",
+    const { ownerID } = req.params;
+    const { listName } = req.body ?? {};
+
+    if (typeof ownerID !== "string" || !ownerID.trim()) {
+        return res.status(400).json({
+            error: "A valid ownerID is required.",
         });
+    }
+
+    if (typeof listName !== "string" || !listName.trim()) {
+        return res.status(400).json({
+            error: "A valid listName is required.",
+        });
+    }
+
+    try {
+        await checkListAccess(auth0Sub, ownerID);
+
+        const list = await prismaClient.list.update({
+            where: { ownerID },
+            data: {  listName: listName.trim(), },
+        });
+
+        return res.status(200).json({
+            listName: list.listName,
+        });
+    } catch (error) {
+        return handleApiError(res, error);
     }
 });
 
 router.get("/load", async (req, res) => {
     const ownerID = typeof req.query.ownerID === "string" ? req.query.ownerID : null;
     const shareID = typeof req.query.shareID === "string" ? req.query.shareID : null;
-    if (!ownerID && !shareID)
-        return res.status(500).json({error: "Owner or Share ID does not exist"});
+
+    if (!ownerID && !shareID) {
+        return res.status(400).json({
+            error: "Either ownerID or shareID is required.",
+        });
+    }
+
     try {
         let listData = null
         if(ownerID) {
             listData = await prismaClient.list.findUnique({
                 where: {ownerID: ownerID},
-                include: {Item: true},
+                select: {
+                    listName: true,
+                    ownerID: true,
+                    shareID: true,
+                    // Everything auth0Sub
+                    Item: {
+                        select: {
+                            itemID: true,
+                            itemName: true,
+                            itemQuantity: true,
+                            itemLink: true,
+                            itemImageURL: true,
+                            itemDescription: true,
+                        },
+                    },
+                }
             })
         }else if(shareID) {
             listData = await prismaClient.list.findUnique({
-                where: {shareID: shareID},
-                include: {Item: true},
-            })
+                where: { shareID },
+                select: {
+                    listName: true,
+                    shareID: true,
+                    // Everything except ownerID & auth0Sub
+                    Item: {
+                        select: {
+                            itemID: true,
+                            itemName: true,
+                            itemQuantity: true,
+                            itemLink: true,
+                            itemImageURL: true,
+                            itemDescription: true,
+                        },
+                    },
+                },
+            });
         }
+        if(!listData)
+            throw new ApiError(404, "List not found.");
         return res.status(200).json(listData);
     }catch(error) {
-        console.error(error);
-        return res.status(500).json({
-            error: "Failed to create list",
-        });
+        return handleApiError(res, error);
     }
 })
 
-router.get("/shareid", async (req, res) => {
-    //const auth0Sub = req.auth?.payload?.sub ?? null;
-    const ownerID = req.body.ownerID ?? null;
+router.get("/shareid", optionalAccessToken, async (req, res) => {
+    const auth0Sub = req.auth?.payload?.sub ?? null;
+    const ownerID = typeof req.query.ownerID === "string" ? req.query.ownerID : null;
+
+    if (!ownerID?.trim()) {
+        return res.status(400).json({
+            error: "ownerID is required.",
+        });
+    }
+
     try {
+        await checkListAccess(auth0Sub, ownerID);
+
         const list = await prismaClient.list.findUnique({
-            where: {
-                ownerID: ownerID,
-            },
-            select: {
-                shareID: true,
-            }
+            where: { ownerID },
+            select: { shareID: true },
         });
-        if(!list)
-            return res.status(404).json({error: "List not found"})
-        return res.status(200).json(list.shareID);
+
+        return res.status(200).json({
+            shareID: list?.shareID,
+        });
     } catch (error) {
-        console.error(error);
-        return res.status(500).json({
-            error: "Failed to update list name",
-        });
+        return handleApiError(res, error);
     }
 });
 
-router.post("/createShareID", async (req, res) => {
-    //const auth0Sub = req.auth?.payload?.sub ?? null;
-    const ownerID = req.body.ownerID ?? null;
+router.post("/createShareID", optionalAccessToken, async (req, res) => {
+    const auth0Sub = req.auth?.payload?.sub ?? null;
+    const {ownerID} = req.body;
+
     try {
-        const list = await prismaClient.list.update({
+        await checkListAccess(auth0Sub, ownerID);
+        const newShareID = nanoid();
+
+        await prismaClient.list.updateMany({
             where: {
-                ownerID: ownerID,
+                ownerID,
+                shareID: null,
             },
             data: {
-                shareID: nanoid(),
-            }
+                shareID: newShareID,
+            },
         });
-        if(!list)
-            return res.status(404).json({error: "List not found"})
-        return res.status(200).json(list.shareID);
+
+        const list = await prismaClient.list.findUnique({
+            where: { ownerID },
+            select: { shareID: true },
+        });
+
+        if (!list) {
+            throw new ApiError(404, "List not found.");
+        }
+
+        return res.status(200).json({
+            shareID: list.shareID,
+        });
     } catch (error) {
-        console.error(error);
-        return res.status(500).json({
-            error: "Failed to update list name",
-        });
+        return handleApiError(res, error);
     }
 });
 
@@ -145,8 +189,10 @@ router.delete("/delete", optionalAccessToken, async (req, res) => {
     const auth0Sub = req.auth?.payload?.sub ?? null;
     const { ownerID } = req.body;
 
-    if (!ownerID) {
-        return res.status(400).json({ error: "ownerID is required." });
+    if (typeof ownerID !== "string" || !ownerID.trim()) {
+        return res.status(400).json({
+            error: "A valid ownerID is required.",
+        });
     }
 
     try {
@@ -162,12 +208,12 @@ router.delete("/delete", optionalAccessToken, async (req, res) => {
             });
 
             if (!list) {
-                throw new Error("List not found.");
+                throw new ApiError(404, "List not found.");
             }
 
             // Reject if the list belongs to a different authenticated user
             if (list.auth0Sub && list.auth0Sub !== auth0Sub) {
-                throw new Error("Unauthorized.");
+                throw new ApiError(403, "Unauthorized.");
             }
 
             await tx.item.deleteMany({
@@ -175,6 +221,10 @@ router.delete("/delete", optionalAccessToken, async (req, res) => {
                     ownerID: ownerID,
                 },
             });
+
+            if (!list) {
+                throw new ApiError(404, "List not found.");
+            }
 
             // Delete any attached shared lists
             if(list.shareID) {
@@ -192,20 +242,10 @@ router.delete("/delete", optionalAccessToken, async (req, res) => {
             });
         });
 
-        return res.status(200).json("List deleted successfully.");
+        return res.status(204).send();
 
     } catch (error) {
-        if (error instanceof Error) {
-            if (error.message === "Unauthorized.") {
-                return res.status(403).json({ error: error.message });
-            }
-
-            if (error.message === "List not found.") {
-                return res.status(404).json({ error: error.message });
-            }
-        }
-
-        return res.status(500).json({ error: "Failed to delete list." });
+        return handleApiError(res, error);
     }
 });
 

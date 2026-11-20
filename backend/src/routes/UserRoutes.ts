@@ -2,6 +2,7 @@ import {Router} from "express";
 import prismaClient from "../database/prisma";
 import {nanoid} from "nanoid";
 import {requiredAccessToken} from "../middleware/auth0";
+import {handleApiError} from "../utils/APIResponse";
 
 const router = Router();
 
@@ -21,10 +22,7 @@ router.get("/userlists", requiredAccessToken, async (req, res) => {
 
         return res.status(200).json(lists);
     } catch (error) {
-        console.error(error);
-        return res.status(500).json({
-            error: "Failed to retrieve user lists",
-        });
+        return handleApiError(res, error);
     }
 });
 
@@ -54,10 +52,7 @@ router.get("/usersharelists", requiredAccessToken, async (req, res) => {
 
         return res.status(200).json(result);
     } catch (error) {
-        console.error(error);
-        return res.status(500).json({
-            error: "Failed to retrieve user lists",
-        });
+        return handleApiError(res, error);
     }
 });
 
@@ -77,10 +72,7 @@ router.delete("/removesharelist", requiredAccessToken, async (req, res) => {
 
         return res.status(200);
     } catch (error) {
-        console.error(error);
-        return res.status(500).json({
-            error: "Failed to delete shared list",
-        });
+        return handleApiError(res, error);
     }
 });
 
@@ -100,10 +92,7 @@ router.post("/setuserlist", requiredAccessToken, async (req, res) => {
 
         return res.status(200).json(list);
     } catch (error) {
-        console.error(error);
-        return res.status(500).json({
-            error: "Failed to retrieve user lists",
-        });
+        return handleApiError(res, error);
     }
 });
 
@@ -132,10 +121,7 @@ router.post("/setusersharelist", requiredAccessToken, async (req, res) => {
 
         return res.status(201).json(list);
     } catch (error) {
-        console.error(error);
-        return res.status(500).json({
-            error: "Failed to retrieve user lists",
-        });
+        return handleApiError(res, error);
     }
 });
 

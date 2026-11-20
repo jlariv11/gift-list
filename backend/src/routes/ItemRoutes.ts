@@ -2,6 +2,7 @@ import { Router } from "express";
 import prismaClient from "../database/prisma";
 import {optionalAccessToken} from "../middleware/auth0";
 import {nanoid} from "nanoid";
+import {handleApiError} from "../utils/APIResponse";
 
 const router = Router();
 
@@ -83,10 +84,7 @@ router.post("/savepurchases", async (req, res) => {
         })
         return res.status(200).json("items updated successfully");
     } catch (error) {
-        console.error(error);
-        return res.status(500).json({
-            error: "Failed to create list",
-        });
+        return handleApiError(res, error);
     }
 });
 
