@@ -23,7 +23,7 @@ model List {
   shareID         String?      @unique
   auth0Sub        String?
   listName        String       @default("List")
-  onlyThisAccount Boolean      @default(false)
+  onlyThisAccount Boolean      @default(true)
   Item            Item[]
   SharedList      SharedList[]
 }

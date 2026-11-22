@@ -25,9 +25,15 @@ export async function createList(listName: string) {
 export async function updateListName(listData: {ownerID: string, listName: string}) {
     const token = await getOrIgnoreAccessToken();
     const headers = token ? {Authorization: `Bearer ${token}`} : {};
-    await axios.post(ROUTES.UPDATE_LIST_NAME, listData, {
-        headers: headers
-    });
+    await axios.patch(
+        `${ROUTES.LIST}/${listData.ownerID}`,
+        {
+            listName: listData.listName,
+        },
+        {
+            headers: headers,
+        }
+    );
 }
 
 export async function saveItems(listProps: {ownerID: string, items: Item[]}) {
@@ -47,7 +53,13 @@ export async function saveItems(listProps: {ownerID: string, items: Item[]}) {
 }
 
 export async function saveSharedList(listProps: ListProps) {
-    await axios.post(ROUTES.SAVE_PURCHASES, listProps);
+    await axios.patch(ROUTES.SAVE_PURCHASES, {
+        shareID: listProps.shareID,
+        items: listProps.items.map(item => ({
+            itemID: item.itemID,
+            itemQuantityPurchased: item.itemQuantityPurchased ?? 0,
+        })),
+    });
 }
 
 export async function deleteItems(itemIDs: number[], ownerID: string) {

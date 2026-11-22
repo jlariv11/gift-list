@@ -76,10 +76,7 @@ export default function ShareList() {
         }
     }, [state]);
 
-    function updatePurchaseCount(
-        itemID: number | undefined,
-        quantity: number
-    ) {
+    function updatePurchaseCount(itemID: number | undefined, quantity: number) {
         const item = items.find(i => i.itemID === itemID);
         if (!item) return;
 
@@ -101,11 +98,7 @@ export default function ShareList() {
             const existing = prev.find(i => i.itemID === itemID);
 
             if (existing) {
-                return prev.map(i =>
-                    i.itemID === itemID
-                        ? { ...i, itemQuantityPurchased: newQuantity }
-                        : i
-                );
+                return prev.map(i => i.itemID === itemID ? { ...i, itemQuantityPurchased: newQuantity } : i);
             }
 
             return [
@@ -125,9 +118,7 @@ export default function ShareList() {
 
     async function saveItems() {
         const updatedItems = items.map(item => {
-            const purchasedItem = purchasedItems.find(
-                i => i.itemID === item.itemID
-            );
+            const purchasedItem = purchasedItems.find(i => i.itemID === item.itemID);
 
             if (!purchasedItem) return item;
 

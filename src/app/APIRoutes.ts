@@ -1,7 +1,7 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export const ROUTES = {
-    LIST: `${API_URL}/lists`,
+    LIST: `${API_URL}/api/lists`,
     GET_LIST: `${API_URL}/api/lists/load`,
     GET_USER_LISTS: `${API_URL}/api/user/userlists`,
     GET_USER_SHARE_LISTS: `${API_URL}/api/user/usersharelists`,

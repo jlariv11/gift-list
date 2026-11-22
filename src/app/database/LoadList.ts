@@ -35,7 +35,7 @@ export async function createShareID(ownerID: string){
 
 export async function loadViewList(shareID: string){
     const token = await getOrIgnoreAccessToken();
-    const data = (await axios.get(ROUTES.GET_LIST, {params: {shareID: shareID}})).data;
+    const data = (await axios.get(ROUTES.GET_LIST, {params: {ownerID: null, shareID: shareID}})).data;
     const listData: ListData = {
         ownerID: data.ownerID,
         auth0Owner: data.auth0Owner,
