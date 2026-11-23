@@ -1,15 +1,17 @@
-"use client"
-import {SessionContext} from "../SessionContext";
-import {useContext, useEffect, useState} from "react";
-import ListButton from "@/app/elements/ListButton";
-import Modal from "@/app/components/Modal";
-import ListInput from "@/app/elements/ListInput";
-import {addUserToList, addUserToSharedList, getUserListInfo, getUserSharedListInfo} from "@/app/database/UserLists";
-import {SessionData} from "@auth0/nextjs-auth0/types";
-import {FaTrashCan} from "react-icons/fa6";
-import {deleteList, removeSharedList} from "@/app/database/SaveList";
-import WarningModal from "@/app/components/WarningModal";
-import {useRouter} from "next/navigation";
+"use client";
+
+import { useContext, useEffect, useState } from "react";
+import { SessionContext } from "../SessionContext";
+import ListButton from "../elements/ListButton";
+import Modal from "../components/Modal";
+import ListInput from "../elements/ListInput";
+import {addUserToList, addUserToSharedList, getUserListInfo, getUserSharedListInfo} from "../database/UserLists";
+import { SessionData } from "@auth0/nextjs-auth0/types";
+import {FaArrowRight, FaLink, FaPlus, FaTrashCan, FaUserGroup} from "react-icons/fa6";
+import {deleteList, removeSharedList} from "../database/SaveList";
+import WarningModal from "../components/WarningModal";
+import { useRouter } from "next/navigation";
+import {getAccessToken, hasAccessToken} from "@/app/Helper";
 
 interface ListProps {
     ownerID: string;
@@ -18,93 +20,125 @@ interface ListProps {
 }
 
 interface SharedListProps {
-    sharedListName: string;
-    accountSharedTo: string;
-    id: number;
+    listName: string;
     shareID: string;
 }
 
 type ListModalProps = {
-    session: SessionData | null;
     updateLists: () => void;
-    setAddListModal: (modalToggle: boolean) => void
-}
+    setAddListModal: (modalToggle: boolean) => void;
+};
 
-const ListModal = (props: ListModalProps) => {
+const ListModal = ({updateLists, setAddListModal}: ListModalProps) => {
     const [link, setLink] = useState("");
 
     function submit() {
-        if (props.session && props.session.user.email) {
-            if (link.includes("owner")) {
-                addUserToList(link, props.session.user.email).then(() => {
-                    props.updateLists();
-                    props.setAddListModal(false);
-                })
-            } else if (link.includes("share")) {
-                addUserToSharedList(link, props.session.user.email).then(() => {
-                    props.updateLists();
-                    props.setAddListModal(false);
-                })
-            }
+        if (link.includes("owner")) {
+            addUserToList(link).then(() => {
+                updateLists();
+                setAddListModal(false);
+            });
+        } else if (link.includes("share")) {
+            addUserToSharedList(link).then(() => {
+                updateLists();
+                setAddListModal(false);
+            });
         }
     }
 
     return (
-        <div>
-            <div className={"w-100 space-y-2 b-4 border-4 rounded-md border-gray-400 p-4 bg-gray-300"}>
-                <ListInput type={"text"} value={link} label={"List Link:"}
-                           onChange={(e) => setLink(e.target.value)}></ListInput>
-                <ListButton buttonText={"Submit"} onClick={() => submit()}></ListButton>
+        <div className="space-y-5">
+            <div>
+                <p className="mb-4 text-sm leading-6 text-muted">
+                    Paste an edit or share link to add an existing list
+                    to your account.
+                </p>
+
+                <ListInput
+                    type="text"
+                    value={link}
+                    label="List link"
+                    placeholder="Paste a Gift List link..."
+                    onChange={(e) => setLink(e.target.value)}
+                />
+            </div>
+
+            <div className="flex justify-end gap-3 border-t border-border pt-5">
+                <ListButton
+                    variant="ghost"
+                    buttonText="Cancel"
+                    onClick={() => setAddListModal(false)}
+                />
+
+                <ListButton
+                    buttonText="Add list"
+                    onClick={submit}
+                />
             </div>
         </div>
-    )
-}
+    );
+};
 
 export default function AccountPage() {
+    const [accessToken, setHasAccessToken] = useState(false);
 
-    const session = useContext(SessionContext);
     const [lists, setLists] = useState<ListProps[]>([]);
     const [sharedLists, setSharedLists] = useState<SharedListProps[]>([]);
+
     const [addListModal, setAddListModal] = useState(false);
     const [deleteListModal, setDeleteListModal] = useState(false);
-    const [listToDelete, setListToDelete] = useState<{ id: string, shared: boolean }>();
+
+    const [listToDelete, setListToDelete] = useState<{
+        id: string;
+        shared: boolean;
+    }>();
+
     const router = useRouter();
+
+    useEffect(() => {
+        hasAccessToken().then(hasToken => {
+            if(hasToken){
+                setHasAccessToken(hasToken);
+                updateLists();
+            }
+        })
+    }, []);
 
     function linkFromID(id: string, edit: boolean): string {
         const baseUrl = window.location.origin;
         const param = edit ? `owner=${id}` : `share=${id}`;
+
         return id ? `${baseUrl}?${param}` : "";
     }
 
     function addToClipboard(text: string) {
-        navigator.clipboard.writeText(text).then(() => alert("Copied to clipboard!"))
-    }
-
-    function handleAddList() {
-        setAddListModal(true);
+        navigator.clipboard.writeText(text);
     }
 
     function updateLists() {
-        if (session && session.user.email) {
-            getUserListInfo(session.user.email).then((info) => {
-                setLists(info);
-            })
-            getUserSharedListInfo(session.user.email).then((info) => {
-                setSharedLists(info);
-            })
-        }
-    }
+        getUserListInfo().then((info) => {
+            setLists(info);
+        });
 
-    useEffect(() => {
-        updateLists();
-    }, [])
+        getUserSharedListInfo().then((info) => {
+            setSharedLists(info);
+        });
+
+    }
 
     function handleLogout() {
-        window.location.href = "auth/logout"
+        window.location.href = "auth/logout";
     }
 
-    function handleDeleteList(ownerID: string, shared: boolean = false) {
-        setListToDelete({id: ownerID, shared});
+    function handleDeleteList(
+        ownerID: string,
+        shared: boolean = false
+    ) {
+        setListToDelete({
+            id: ownerID,
+            shared
+        });
+
         setDeleteListModal(true);
     }
 
@@ -112,101 +146,628 @@ export default function AccountPage() {
         if (!listToDelete) {
             return;
         }
+
         if (listToDelete.shared) {
-            if (session && session.user.email) {
-                removeSharedList(listToDelete.id, session.user.email);
-                setSharedLists(sharedLists.filter(list => list.shareID !== listToDelete.id));
+            if (accessToken) {
+                removeSharedList(
+                    listToDelete.id,
+                );
+
+                setSharedLists(
+                    sharedLists.filter(
+                        (list) =>
+                            list.shareID !== listToDelete.id
+                    )
+                );
             }
         } else {
             deleteList(listToDelete.id);
-            setLists(lists.filter(list => list.ownerID !== listToDelete.id));
+
+            setLists(
+                lists.filter(
+                    (list) =>
+                        list.ownerID !== listToDelete.id
+                )
+            );
         }
     }
 
+    const modalOpen =
+        deleteListModal || addListModal;
+
     return (
-        <div>
-            <div
-                className={`m-2 px-4 sm:px-6 md:px-8 flex flex-col items-center transition-all duration-100 ${deleteListModal || addListModal ? "blur-xs" : ""}`}>
-                <div className={"w-full max-w-4xl space-y-1.5"}>
-                    <div className={"space-y-5 b-4 border-4 rounded-md border-gray-400 p-4 bg-gray-300"}>
-                        <div className={"flex justify-between items-center"}>
-                            <h1 className={"text-3xl"}>Welcome, {session?.user.name}</h1>
-                            <ListButton buttonText={"Log Out"} onClick={() => handleLogout()}></ListButton>
-                        </div>
-                        <h1 className={"text-3xl"}>User Info</h1>
-                        <div className={"b-4 border-4 rounded-md border-gray-400 p-4 bg-gray-300"}>
-                            <h2><strong>Email:</strong> {session?.user.email}</h2>
+        <>
+            <main
+                className={`
+                    min-h-screen
+                    bg-page
+                    transition
+                    duration-150
+                    ${modalOpen ? "blur-[1px]" : ""}
+                `}
+            >
+                <div
+                    className="
+                        mx-auto
+                        w-full
+                        max-w-5xl
+                        px-4
+                        py-8
+                        sm:px-6
+                        sm:py-12
+                        lg:px-8
+                    "
+                >
 
+                    {/* Account header */}
+                    <header
+                        className="
+                            mb-10
+                            flex
+                            flex-col
+                            gap-5
+                            border-b
+                            border-border
+                            pb-8
+                            sm:flex-row
+                            sm:items-center
+                            sm:justify-between
+                        "
+                    >
+                        <div>
+                            <p className="text-sm font-medium text-muted">
+                                Your account
+                            </p>
+
+                            <h1
+                                className="
+                                    mt-1
+                                    text-3xl
+                                    font-semibold
+                                    tracking-tight
+                                    text-foreground
+                                "
+                            >
+                                {accessToken
+                                    ? `Welcome, ${"Figure this out later"}`
+                                    : "Welcome"}
+                            </h1>
+
+                            {accessToken && (
+                                <p className="mt-2 text-sm text-muted">
+                                    {"figure this out later"}
+                                </p>
+                            )}
                         </div>
-                        <div className="lg:flex gap-4">
-                            <div className="flex-1 min-h-0">
-                                <h1 className="text-3xl">Your Lists</h1>
-                                <div
-                                    className="b-4 border-4 rounded-md border-gray-400 p-4 bg-gray-300 h-108 overflow-y-auto space-y-2">
-                                    {lists.length > 0 ? (
-                                        lists.map((list) => (
-                                            <div
-                                                className={"flex justify-between b-4 border-4 rounded-md border-gray-400 p-4 bg-gray-300"}
-                                                key={list.ownerID}>
-                                                <div><h2 className={"text-lg lg:text-2xl"}><strong>{list.listName}</strong></h2>
-                                                    <h2><a
-                                                        onClick={() => addToClipboard(linkFromID(list.ownerID, true))}
-                                                        className={"cursor-pointer text-sm text-gray-800 hover:text-orange-400"}><strong>Copy
-                                                        Edit Link</strong></a></h2> <h2><a
-                                                        onClick={() => addToClipboard(linkFromID(list.shareID, false))}
-                                                        className={"cursor-pointer text-gray-800 text-sm hover:text-orange-400"}><strong>Copy
-                                                        Share Link</strong></a></h2></div>
-                                                <ListButton onClick={() => router.push(linkFromID(list.ownerID, true))}
-                                                            buttonText={"Go To List"}></ListButton> <ListButton
-                                                onClick={() => handleDeleteList(list.ownerID)}
-                                                buttonIcon={<FaTrashCan/>}></ListButton></div>
-                                        ))
-                                    ) : (
-                                        <p className="text-gray-600 italic">No lists yet.</p>
-                                    )}
+
+                        <ListButton
+                            variant="secondary"
+                            buttonText="Log out"
+                            onClick={handleLogout}
+                        />
+                    </header>
+
+                    {/* Lists heading */}
+                    <div
+                        className="
+                            mb-6
+                            flex
+                            flex-col
+                            gap-4
+                            sm:flex-row
+                            sm:items-end
+                            sm:justify-between
+                        "
+                    >
+                        <div>
+                            <h2
+                                className="
+                                    text-2xl
+                                    font-semibold
+                                    tracking-tight
+                                    text-foreground
+                                "
+                            >
+                                My lists
+                            </h2>
+
+                            <p className="mt-1 text-sm text-muted">
+                                Your gift lists and lists shared with you.
+                            </p>
+                        </div>
+
+                        <ListButton
+                            variant="secondary"
+                            buttonText="Add existing list"
+                            buttonIcon={<FaPlus />}
+                            onClick={() => setAddListModal(true)}
+                        />
+                    </div>
+
+                    <div
+                        className="
+                            grid
+                            grid-cols-1
+                            gap-10
+                            lg:grid-cols-2
+                        "
+                    >
+
+                        {/* Your lists */}
+                        <section>
+                            <div
+                                className="
+                                    mb-4
+                                    flex
+                                    items-center
+                                    justify-between
+                                "
+                            >
+                                <div>
+                                    <h3
+                                        className="
+                                            text-lg
+                                            font-semibold
+                                            text-foreground
+                                        "
+                                    >
+                                        Your lists
+                                    </h3>
+
+                                    <p className="mt-1 text-xs text-muted">
+                                        Lists you can edit and manage.
+                                    </p>
                                 </div>
+
+                                <span
+                                    className="
+                                        rounded-full
+                                        bg-primary-light
+                                        px-2.5
+                                        py-1
+                                        text-xs
+                                        font-medium
+                                        text-primary
+                                    "
+                                >
+                                    {lists.length}
+                                </span>
                             </div>
 
-                            <div className="flex-1 min-h-0">
-                                <h1 className="text-3xl">Lists shared with you</h1>
-                                <div
-                                    className="b-4 border-4 rounded-md border-gray-400 p-4 bg-gray-300 h-108 overflow-y-auto space-y-2">
-                                    {sharedLists.length > 0 ? (
-                                        sharedLists.map((list) => (
+                            {lists.length > 0 ? (
+                                <div className="space-y-3">
+                                    {lists.map((list) => (
+                                        <div
+                                            key={list.ownerID}
+                                            className="
+                                                group
+                                                rounded-xl
+                                                border
+                                                border-border
+                                                bg-surface
+                                                p-5
+                                                transition
+                                                hover:border-[#D8D8D2]
+                                                hover:shadow-sm
+                                            "
+                                        >
                                             <div
-                                                className={"flex justify-between b-4 border-4 rounded-md border-gray-400 p-4 bg-gray-300"}
-                                                key={list.shareID}>
-                                                <div><h2 className={"text-lg lg:text-2xl"}><strong>{list.sharedListName}</strong>
-                                                </h2> <h2><a
-                                                    onClick={() => addToClipboard(linkFromID(list.shareID, false))}
-                                                    className={"cursor-pointer text-sm text-gray-800 hover:text-orange-400"}><strong>Copy
-                                                    Share Link</strong></a></h2></div>
-                                                <ListButton onClick={() => router.push(linkFromID(list.shareID, false))}
-                                                            buttonText={"Go To List"}></ListButton> <ListButton
-                                                onClick={() => handleDeleteList(list.shareID, true)}
-                                                buttonIcon={<FaTrashCan/>}></ListButton></div>
-                                        ))
-                                    ) : (
-                                        <p className="text-gray-600 italic">No shared lists.</p>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
+                                                className="
+                                                    flex
+                                                    items-start
+                                                    justify-between
+                                                    gap-4
+                                                "
+                                            >
+                                                <div className="min-w-0">
+                                                    <h4
+                                                        className="
+                                                            truncate
+                                                            text-base
+                                                            font-semibold
+                                                            text-foreground
+                                                            cursor-default
+                                                        "
+                                                    >
+                                                        {list.listName}
+                                                    </h4>
 
-                        <ListButton onClick={() => handleAddList()} buttonText={"Add List"}></ListButton>
+                                                    <p
+                                                        className="
+                                                            mt-1
+                                                            text-xs
+                                                            text-muted
+                                                            cursor-default
+                                                        "
+                                                    >
+                                                        Your list
+                                                    </p>
+                                                </div>
+
+                                                <button
+                                                    type="button"
+                                                    aria-label="Delete list"
+                                                    onClick={() =>
+                                                        handleDeleteList(
+                                                            list.ownerID
+                                                        )
+                                                    }
+                                                    className="
+                                                        flex
+                                                        h-8
+                                                        w-8
+                                                        shrink-0
+                                                        items-center
+                                                        justify-center
+                                                        rounded-lg
+                                                        text-muted
+                                                        transition-colors
+                                                        hover:bg-danger-light
+                                                        hover:text-danger
+                                                        cursor-pointer
+                                                    "
+                                                >
+                                                    <FaTrashCan className="text-sm" />
+                                                </button>
+                                            </div>
+
+                                            <div
+                                                className="
+                                                    mt-5
+                                                    flex
+                                                    flex-wrap
+                                                    items-center
+                                                    gap-x-4
+                                                    gap-y-3
+                                                    border-t
+                                                    border-border
+                                                    pt-4
+                                                "
+                                            >
+                                                <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        addToClipboard(
+                                                            linkFromID(
+                                                                list.ownerID,
+                                                                true
+                                                            )
+                                                        )
+                                                    }
+                                                    className="
+                                                        inline-flex
+                                                        items-center
+                                                        gap-1.5
+                                                        text-xs
+                                                        font-medium
+                                                        text-muted
+                                                        transition-colors
+                                                        hover:text-primary
+                                                        cursor-pointer
+                                                    "
+                                                >
+                                                    <FaLink />
+                                                    Copy edit link
+                                                </button>
+
+                                                {list.shareID && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            addToClipboard(
+                                                                linkFromID(
+                                                                    list.shareID,
+                                                                    false
+                                                                )
+                                                            )
+                                                        }
+                                                        className="
+                                                            inline-flex
+                                                            items-center
+                                                            gap-1.5
+                                                            text-xs
+                                                            font-medium
+                                                            text-muted
+                                                            transition-colors
+                                                            hover:text-primary
+                                                            cursor-pointer
+                                                        "
+                                                    >
+                                                        <FaUserGroup />
+                                                        Copy share link
+                                                    </button>
+                                                )}
+
+                                                <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        router.push(
+                                                            linkFromID(
+                                                                list.ownerID,
+                                                                true
+                                                            )
+                                                        )
+                                                    }
+                                                    className="
+                                                        ml-auto
+                                                        inline-flex
+                                                        items-center
+                                                        gap-2
+                                                        text-sm
+                                                        font-medium
+                                                        text-primary
+                                                        transition-colors
+                                                        hover:text-primary-hover
+                                                        cursor-pointer
+                                                    "
+                                                >
+                                                    Open
+                                                    <FaArrowRight className="text-xs" />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <EmptyListState
+                                    text="You don't have any lists yet."
+                                />
+                            )}
+                        </section>
+
+                        {/* Shared lists */}
+                        <section>
+                            <div
+                                className="
+                                    mb-4
+                                    flex
+                                    items-center
+                                    justify-between
+                                "
+                            >
+                                <div>
+                                    <h3
+                                        className="
+                                            text-lg
+                                            font-semibold
+                                            text-foreground
+                                        "
+                                    >
+                                        Shared with you
+                                    </h3>
+
+                                    <p className="mt-1 text-xs text-muted">
+                                        Lists from friends and family.
+                                    </p>
+                                </div>
+
+                                <span
+                                    className="
+                                        rounded-full
+                                        bg-primary-light
+                                        px-2.5
+                                        py-1
+                                        text-xs
+                                        font-medium
+                                        text-primary
+                                    "
+                                >
+                                    {sharedLists.length}
+                                </span>
+                            </div>
+
+                            {sharedLists.length > 0 ? (
+                                <div className="space-y-3">
+                                    {sharedLists.map((list) => (
+                                        <div
+                                            key={list.shareID}
+                                            className="
+                                                rounded-xl
+                                                border
+                                                border-border
+                                                bg-surface
+                                                p-5
+                                                transition
+                                                hover:border-[#D8D8D2]
+                                                hover:shadow-sm
+                                            "
+                                        >
+                                            <div
+                                                className="
+                                                    flex
+                                                    items-start
+                                                    justify-between
+                                                    gap-4
+                                                "
+                                            >
+                                                <div className="min-w-0">
+                                                    <h4
+                                                        className="
+                                                            truncate
+                                                            text-base
+                                                            font-semibold
+                                                            text-foreground
+                                                        "
+                                                    >
+                                                        {list.listName}
+                                                    </h4>
+
+                                                    <p
+                                                        className="
+                                                            mt-1
+                                                            text-xs
+                                                            text-muted
+                                                        "
+                                                    >
+                                                        Shared list
+                                                    </p>
+                                                </div>
+
+                                                <button
+                                                    type="button"
+                                                    aria-label="Remove shared list"
+                                                    onClick={() =>
+                                                        handleDeleteList(
+                                                            list.shareID,
+                                                            true
+                                                        )
+                                                    }
+                                                    className="
+                                                        flex
+                                                        h-8
+                                                        w-8
+                                                        shrink-0
+                                                        items-center
+                                                        justify-center
+                                                        rounded-lg
+                                                        text-muted
+                                                        transition-colors
+                                                        hover:bg-danger-light
+                                                        hover:text-danger
+                                                    "
+                                                >
+                                                    <FaTrashCan className="text-sm" />
+                                                </button>
+                                            </div>
+
+                                            <div
+                                                className="
+                                                    mt-5
+                                                    flex
+                                                    items-center
+                                                    gap-4
+                                                    border-t
+                                                    border-border
+                                                    pt-4
+                                                "
+                                            >
+                                                <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        addToClipboard(
+                                                            linkFromID(
+                                                                list.shareID,
+                                                                false
+                                                            )
+                                                        )
+                                                    }
+                                                    className="
+                                                        inline-flex
+                                                        items-center
+                                                        gap-1.5
+                                                        text-xs
+                                                        font-medium
+                                                        text-muted
+                                                        transition-colors
+                                                        hover:text-primary
+                                                    "
+                                                >
+                                                    <FaLink />
+                                                    Copy link
+                                                </button>
+
+                                                <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        router.push(
+                                                            linkFromID(
+                                                                list.shareID,
+                                                                false
+                                                            )
+                                                        )
+                                                    }
+                                                    className="
+                                                        ml-auto
+                                                        inline-flex
+                                                        items-center
+                                                        gap-2
+                                                        text-sm
+                                                        font-medium
+                                                        text-primary
+                                                        transition-colors
+                                                        hover:text-primary-hover
+                                                    "
+                                                >
+                                                    Open
+                                                    <FaArrowRight className="text-xs" />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <EmptyListState
+                                    text="No lists have been shared with you yet."
+                                />
+                            )}
+                        </section>
                     </div>
                 </div>
+            </main>
 
-            </div>
-            <div id={"modal"}></div>
-            {addListModal && <Modal modalTitle={"Add List"} modalDivID={"modal"} showModalToggle={setAddListModal}
-                                    modalBody={<ListModal session={session} setAddListModal={setAddListModal}
-                                                          updateLists={updateLists}/>}></Modal>}
-            {deleteListModal &&
-                <Modal modalTitle={"Delete List?"} modalDivID={"modal"} showModalToggle={setDeleteListModal}
-                       modalBody={<WarningModal warning={"Are you sure you want to delete this list?"}
-                                                toggleModal={setDeleteListModal}
-                                                actionFunction={removeList}/>}></Modal>}
+            <div id="modal" />
+
+            {addListModal && (
+                <Modal
+                    modalTitle="Add an existing list"
+                    modalDivID="modal"
+                    showModalToggle={setAddListModal}
+                    modalBody={
+                        <ListModal
+                            setAddListModal={setAddListModal}
+                            updateLists={updateLists}
+                        />
+                    }
+                />
+            )}
+
+            {deleteListModal && (
+                <Modal
+                    modalTitle={
+                        listToDelete?.shared
+                            ? "Remove list?"
+                            : "Delete list?"
+                    }
+                    modalDivID="modal"
+                    showModalToggle={setDeleteListModal}
+                    modalBody={
+                        <WarningModal
+                            warning={
+                                listToDelete?.shared
+                                    ? "Remove this shared list from your account?"
+                                    : "Are you sure you want to permanently delete this list?"
+                            }
+                            toggleModal={setDeleteListModal}
+                            actionFunction={removeList}
+                        />
+                    }
+                />
+            )}
+        </>
+    );
+}
+
+function EmptyListState({ text }: { text: string }) {
+    return (
+        <div
+            className="
+                flex
+                min-h-40
+                items-center
+                justify-center
+                rounded-xl
+                border
+                border-dashed
+                border-border
+                bg-surface
+                px-6
+                py-10
+                text-center
+            "
+        >
+            <p className="text-sm text-muted">
+                {text}
+            </p>
         </div>
     );
 }

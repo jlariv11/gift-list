@@ -1,56 +1,61 @@
-import {IoMdCloseCircleOutline} from "react-icons/io";
+import { IoClose } from "react-icons/io5";
 import ReactDOM from "react-dom";
 
 interface ModalProps {
     modalBody: React.ReactNode;
     modalDivID: string;
     modalTitle: string;
-    showModalToggle: (modalToggle: boolean) => void
+    showModalToggle: (modalToggle: boolean) => void;
     closeActions?: () => void;
     position?: "top" | "bottom" | "left" | "right" | "";
+    ignoreBlur?: boolean;
 }
 
 function createModalContent(props: ModalProps) {
-    function getModalPosition(){
+
+    function getModalPosition() {
         switch (props.position) {
             case "top":
-                return "justify-center items-start"
+                return "justify-center items-start pt-10";
             case "bottom":
-                return "justify-center items-end"
+                return "justify-center items-end pb-10";
             case "left":
-                return "justify-start items-center"
+                return "justify-start items-center pl-4";
             case "right":
-                return "justify-end items-center"
+                return "justify-end items-center pr-4";
             default:
-                return "justify-center items-center"
+                return "justify-center items-center";
         }
     }
-    return (
-        <div className={`fixed inset-0 z-50 flex ${getModalPosition()}`}>
-            <div className="w-full lg:w-200 px-3">
-                <div className="pb-4 border-4 rounded-md border-gray-400 p-4 bg-gray-300 shadow-lg">
-                    <div className="p-2">
-                        <div className="space-y-2 flex justify-between">
-                            <h1 className="text-2xl">{props.modalTitle}</h1>
-                            <IoMdCloseCircleOutline
-                                onClick={() => {props.showModalToggle(false); props.closeActions?.();}}
-                                size={32}
-                                className="text-xl text-orange-400 hover:text-orange-300 cursor-pointer"
-                            />
-                        </div>
 
-                        <div>
-                            {props.modalBody}
-                        </div>
-                    </div>
+    function closeModal() {
+        props.showModalToggle(false);
+        props.closeActions?.();
+    }
+
+    return (
+        <div className={` fixed inset-0 z-50 flex ${getModalPosition()} bg-black/30 p-4 ${props.ignoreBlur ? "" : "backdrop-blur-[2px]"} `} onClick={closeModal}>
+            <div className=" w-full max-w-2xl overflow-hidden rounded-xl border border-border bg-surface shadow-xl" onClick={(e) => e.stopPropagation()}>
+                {/* Header */}
+                <div className=" flex items-center justify-between border-b border-border px-6 py-4">
+                    <h2 className=" text-xl font-semibold tracking-tight text-foreground">{props.modalTitle}</h2>
+
+                    <button type="button" onClick={closeModal} aria-label="Close modal" className=" flex h-9 w-9 items-center justify-center rounded-lg text-muted transition-colors hover:bg-surface-muted hover:text-foreground">
+                        <IoClose size={22} />
+                    </button>
+                </div>
+
+                {/* Content */}
+                <div className="max-h-[80vh] overflow-y-auto p-6">
+                    {props.modalBody}
                 </div>
             </div>
         </div>
     );
 }
 
-
-export default function Modal(props: ModalProps){
+export default function Modal(props: ModalProps) {
     const modalDiv = document.getElementById(props.modalDivID);
-    return (modalDiv !== null) ? ReactDOM.createPortal(createModalContent(props), modalDiv) : <div></div>;
+
+    return modalDiv ? ReactDOM.createPortal(createModalContent(props), modalDiv) : null;
 }

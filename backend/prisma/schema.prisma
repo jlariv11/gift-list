@@ -1,0 +1,38 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Item {
+  itemID                Int     @id @default(autoincrement())
+  ownerID               String
+  itemName              String
+  itemQuantity          Int     @default(1)
+  itemLink              String?
+  itemImageURL          String?
+  itemDescription       String?
+  itemQuantityPurchased Int     @default(0)
+  List                  List    @relation(fields: [ownerID], references: [ownerID])
+}
+
+model List {
+  ownerID         String       @id
+  shareID         String?      @unique
+  auth0Sub        String?
+  listName        String       @default("List")
+  onlyThisAccount Boolean      @default(true)
+  Item            Item[]
+  SharedList      SharedList[]
+}
+
+model SharedList {
+  id              Int    @id @default(autoincrement())
+  accountSharedTo String
+  shareID         String
+  SharedList      List   @relation(fields: [shareID], references: [shareID])
+
+  @@unique([accountSharedTo, shareID])
+}
