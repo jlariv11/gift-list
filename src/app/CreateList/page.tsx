@@ -2,7 +2,15 @@
 
 import {useEffect, useRef, useState} from "react";
 
-import {createList, deleteItems, deleteList, Item, saveItems, updateListName} from "../database/SaveList";
+import {
+    createList,
+    deleteItems,
+    deleteList,
+    Item,
+    saveItems,
+    updateListName,
+    updateOnlyThisAccountStatus
+} from "../database/SaveList";
 
 import ItemElement from "../elements/ItemElement";
 import ListButton from "../elements/ListButton";
@@ -15,7 +23,9 @@ import Modal from "../components/Modal";
 import WarningModal from "../components/WarningModal";
 import {getAccessToken, hasAccessToken} from "@/app/Helper";
 
-import {FaPlus, FaLink, FaPen, FaTrashCan, FaArrowRotateRight} from "react-icons/fa6";
+import {FaPlus, FaLink, FaPen, FaTrashCan, FaArrowRotateRight, FaAdversal} from "react-icons/fa6";
+import {LuShield, LuShieldAlert} from "react-icons/lu";
+import AccessDenied from "@/app/components/AccessDenied";
 
 export interface ListProps {
     listName: string;
@@ -38,6 +48,8 @@ export default function CreateList() {
 
     const [ownerID, setOwnerID] = useState("");
     const [shareID, setShareID] = useState<string | undefined>(undefined);
+    const [onlyThisAccount, setOnlyThisAccount] = useState<boolean>(true);
+    const [accessDenied, setAccessDenied] = useState(true);
 
     const [newList, setNewList] = useState(false);
     const [copiedEditLink, setCopiedEditLink] = useState(true);
@@ -73,10 +85,16 @@ export default function CreateList() {
 
         if (ownerID) {
             loadEditList(ownerID).then((listData) => {
+                if(!listData.authorized) {
+                    setAccessDenied(true);
+                    return;
+                }
                 setListName(listData.listName);
                 setItems(listData.items);
                 setOwnerID(listData.ownerID);
                 setShareID(listData.shareID);
+                setOnlyThisAccount(listData.onlyThisAccount);
+                setAccessDenied(!listData.authorized);
             });
         } else {
             setNewList(true);
@@ -206,7 +224,7 @@ export default function CreateList() {
         showDeleteModal ||
         showNewListModal;
 
-    return (
+    return accessDenied ? <AccessDenied /> : (
         <>
             <main className={` min-h-screen bg-page transition duration-150 ${modalOpen ? "blur-[1px]" : ""} `}>
                 <div className=" mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
@@ -316,6 +334,16 @@ export default function CreateList() {
                                 </div>
 
                                 <ListButton variant={copiedEditLink ? "secondary" : "primary"} buttonText="Copy edit link" buttonIcon={<FaPen />} onClick={() => {addToClipboard(linkFromID(true));setCopiedEditLink(true);}}/>
+                            </div>
+                            {/* OnlyThisAccount Config */}
+                            <div className=" flex flex-col gap-3 py-4 last:pb-0 sm:flex-row sm:items-center sm:justify-between">
+                                <div>
+                                    <p className=" text-sm font-medium text-foreground">Only allow this account to edit</p>
+
+                                    <p className=" mt-1 text-xs text-muted">Choose to allow anyone with the edit link to edit your list or just if you are logged in.</p>
+                                </div>
+
+                                <ListButton variant={onlyThisAccount ? "secondary" : "primary"} buttonText={onlyThisAccount ? "Allow anyone with link to edit" : "Only allow this account to edit"} buttonIcon={<LuShieldAlert />} onClick={() => {updateOnlyThisAccountStatus({ownerID: ownerID, onlyThisAccount: !onlyThisAccount}); setOnlyThisAccount(!onlyThisAccount)}}/>
                             </div>
                         </div>
                     </section>

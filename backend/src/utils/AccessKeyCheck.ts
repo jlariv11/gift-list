@@ -5,17 +5,21 @@ export async function checkListAccess(accessToken: string | null, ownerID: strin
     if(!ownerID){
         throw new ApiError(400, "ownerID is required.");
     }
-    const token = await prismaClient.list.findUnique(
+    const list = await prismaClient.list.findUnique(
         {
             where: { ownerID },
             select: {
                 auth0Sub: true,
+                onlyThisAccount: true,
             }
         });
-    if(!token){
+    if(!list){
         throw new ApiError(404, "List not found.");
     }
-    if (token.auth0Sub && token.auth0Sub !== accessToken) {
-        throw new ApiError(403, "Unauthorized.");
+    if (list.auth0Sub !== null && list.onlyThisAccount && list.auth0Sub !== accessToken) {
+        throw new ApiError(
+            403,
+            "Only the account owner can modify this list."
+        );
     }
 }

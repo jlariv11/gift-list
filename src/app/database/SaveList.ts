@@ -36,6 +36,20 @@ export async function updateListName(listData: {ownerID: string, listName: strin
     );
 }
 
+export async function updateOnlyThisAccountStatus(listData: {ownerID: string, onlyThisAccount: boolean}) {
+    const token = await getOrIgnoreAccessToken();
+    const headers = token ? {Authorization: `Bearer ${token}`} : {};
+    await axios.patch(
+        `${ROUTES.LIST}/${listData.ownerID}`,
+        {
+            onlyThisAccount: listData.onlyThisAccount,
+        },
+        {
+            headers: headers,
+        }
+    );
+}
+
 export async function saveItems(listProps: {ownerID: string, items: Item[]}) {
     const token = await getOrIgnoreAccessToken();
     const headers = token ? {Authorization: `Bearer ${token}`} : {};

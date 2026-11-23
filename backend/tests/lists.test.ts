@@ -1,21 +1,97 @@
 
-import { describe, it, expect, afterEach } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
 import request from "supertest";
 import app from "../src/app";
 import prismaClient from "../src/database/prisma";
+import type { RequestHandler } from "express";
+import type { AuthResult } from "express-oauth2-jwt-bearer";
+
+
+// Mock authentication BEFORE importing the Express app.
+vi.mock("../src/middleware/auth0", () => ({
+    requiredAccessToken: ((req, res, next) => {
+        const authorization = req.headers.authorization;
+
+        if (!authorization?.startsWith("Bearer ")) {
+            return res.status(401).json({
+                error: "Authentication required.",
+            });
+        }
+
+        const userID = authorization.slice(7);
+
+        if (!["user-one", "user-two"].includes(userID)) {
+            return res.status(401).json({
+                error: "Invalid token.",
+            });
+        }
+
+        req.auth = {
+            payload: {
+                sub: userID,
+            },
+            token: authorization.slice(7),
+            header: {},
+        } as AuthResult;
+
+        next();
+    }) satisfies RequestHandler,
+
+    optionalAccessToken: ((req, res, next) => {
+        const authorization = req.headers.authorization;
+
+        if (authorization?.startsWith("Bearer ")) {
+            const userID = authorization.slice(7);
+
+            if (!["user-one", "user-two"].includes(userID)) {
+                return res.status(401).json({
+                    error: "Invalid token.",
+                });
+            }
+
+            req.auth = {
+                payload: { sub: userID },
+                token: userID,
+                header: {},
+            } as AuthResult;
+        }
+
+        next();
+    }) satisfies RequestHandler,
+}));
+
 
 describe("List API", () => {
     const createdOwnerIDs: string[] = [];
+    const USER_ONE = "user-one";
+    const USER_TWO = "user-two";
 
-    async function createList(listName?: string) {
+    function authenticated(userID: string = USER_ONE) {
+        return {
+            Authorization: `Bearer ${userID}`,
+        };
+    }
+
+
+    async function createList(
+        listName = "Test List",
+        auth0Sub: string | null = null
+    ) {
         const response = await request(app)
             .post("/api/lists")
-            .send(listName === undefined ? {} : { listName });
+            .send({ listName });
 
         expect(response.status).toBe(201);
 
         const ownerID = response.body.ownerID as string;
         createdOwnerIDs.push(ownerID);
+
+        if (auth0Sub !== null) {
+            await prismaClient.list.update({
+                where: { ownerID },
+                data: { auth0Sub },
+            });
+        }
 
         return ownerID;
     }
@@ -74,10 +150,14 @@ describe("List API", () => {
         });
 
         it("creates a list with the default name", async () => {
-            const ownerID = await createList();
+            const response = await request(app)
+                .post("/api/lists")
+                .send({});
+
+            expect(response.status).toBe(201);
 
             const list = await prismaClient.list.findUnique({
-                where: { ownerID },
+                where: { ownerID: response.body.ownerID },
             });
 
             expect(list?.listName).toBe("Untitled List");
@@ -102,6 +182,7 @@ describe("List API", () => {
             expect(response.status).toBe(200);
             expect(response.body).toEqual({
                 listName: "Updated Name",
+                onlyThisAccount: true,
             });
 
             const list = await prismaClient.list.findUnique({
@@ -373,6 +454,7 @@ describe("List API", () => {
                 expect(response.status).toBe(200);
                 expect(response.body).toEqual({
                     listName: "Updated",
+                    onlyThisAccount: true,
                 });
 
                 const list = await prismaClient.list.findUnique({
@@ -429,7 +511,6 @@ describe("List API", () => {
                         listName: "Updated",
                         auth0Sub: "attacker-account",
                         shareID: "malicious-share-id",
-                        onlyThisAccount: true,
                     });
 
                 expect(response.status).toBe(200);
@@ -441,7 +522,7 @@ describe("List API", () => {
                 expect(list?.listName).toBe("Updated");
                 expect(list?.auth0Sub).toBeNull();
                 expect(list?.shareID).toBeNull();
-                expect(list?.onlyThisAccount).toBe(false);
+                expect(list?.onlyThisAccount).toBe(true);
             });
 
             it("preserves the original name after invalid input", async () => {
@@ -622,5 +703,158 @@ describe("List API", () => {
                 expect(response.status).toBe(404);
             });
         });
+    });
+
+    describe("PATCH /api/lists/:ownerID - onlyThisAccount", () => {
+        it("defaults onlyThisAccount to true for new lists", async () => {
+            const ownerID = await createList();
+
+            const list = await prismaClient.list.findUnique({
+                where: { ownerID },
+            });
+
+            expect(list?.onlyThisAccount).toBe(true);
+        });
+
+        it("allows the account owner to disable onlyThisAccount", async () => {
+            const ownerID = await createList("My List", USER_ONE);
+
+            const response = await request(app)
+                .patch(`/api/lists/${ownerID}`)
+                .set(authenticated(USER_ONE))
+                .send({ onlyThisAccount: false });
+
+            expect(response.status).toBe(200);
+            expect(response.body.onlyThisAccount).toBe(false);
+
+            const list = await prismaClient.list.findUnique({
+                where: { ownerID },
+            });
+
+            expect(list?.onlyThisAccount).toBe(false);
+        });
+
+        it("allows the account owner to re-enable onlyThisAccount", async () => {
+            const ownerID = await createList("My List", USER_ONE);
+
+            await prismaClient.list.update({
+                where: { ownerID },
+                data: { onlyThisAccount: false },
+            });
+
+            const response = await request(app)
+                .patch(`/api/lists/${ownerID}`)
+                .set(authenticated(USER_ONE))
+                .send({ onlyThisAccount: true });
+
+            expect(response.status).toBe(200);
+            expect(response.body.onlyThisAccount).toBe(true);
+        });
+
+        it("prevents another user from changing onlyThisAccount", async () => {
+            const ownerID = await createList("My List", USER_ONE);
+
+            const response = await request(app)
+                .patch(`/api/lists/${ownerID}`)
+                .set(authenticated(USER_TWO))
+                .send({ onlyThisAccount: false });
+
+            expect(response.status).toBe(403);
+
+            const list = await prismaClient.list.findUnique({
+                where: { ownerID },
+            });
+
+            expect(list?.onlyThisAccount).toBe(true);
+        });
+
+        it("prevents anonymous users from changing onlyThisAccount on account-owned lists", async () => {
+            const ownerID = await createList("My List", USER_ONE);
+
+            const response = await request(app)
+                .patch(`/api/lists/${ownerID}`)
+                .send({ onlyThisAccount: false });
+
+            expect(response.status).toBe(403);
+        });
+
+        it("prevents anonymous users from changing onlyThisAccount even when it is disabled", async () => {
+            const ownerID = await createList("My List", USER_ONE);
+
+            await prismaClient.list.update({
+                where: { ownerID },
+                data: { onlyThisAccount: false },
+            });
+
+            const response = await request(app)
+                .patch(`/api/lists/${ownerID}`)
+                .send({ onlyThisAccount: true });
+
+            expect(response.status).toBe(403);
+        });
+
+        it("allows anonymous lists to be renamed with onlyThisAccount enabled", async () => {
+            const ownerID = await createList();
+
+            const response = await request(app)
+                .patch(`/api/lists/${ownerID}`)
+                .send({ listName: "Updated Anonymous List" });
+
+            expect(response.status).toBe(200);
+            expect(response.body.listName).toBe("Updated Anonymous List");
+        });
+
+        it("allows owner-link editing when onlyThisAccount is disabled", async () => {
+            const ownerID = await createList("My List", USER_ONE);
+
+            await prismaClient.list.update({
+                where: { ownerID },
+                data: { onlyThisAccount: false },
+            });
+
+            const response = await request(app)
+                .patch(`/api/lists/${ownerID}`)
+                .send({ listName: "Updated Through Link" });
+
+            expect(response.status).toBe(200);
+            expect(response.body.listName).toBe("Updated Through Link");
+        });
+
+        it("rejects non-boolean values for onlyThisAccount", async () => {
+            const ownerID = await createList("My List", USER_ONE);
+
+            const response = await request(app)
+                .patch(`/api/lists/${ownerID}`)
+                .set(authenticated(USER_ONE))
+                .send({ onlyThisAccount: "false" });
+
+            expect(response.status).toBe(400);
+        });
+
+        it("rejects requests without any fields to update", async () => {
+            const ownerID = await createList();
+
+            const response = await request(app)
+                .patch(`/api/lists/${ownerID}`)
+                .send({});
+
+            expect(response.status).toBe(400);
+        });
+    });
+
+    it("prevents owner-link editing when onlyThisAccount is enabled", async () => {
+        const ownerID = await createList("My List", USER_ONE);
+
+        const response = await request(app)
+            .patch(`/api/lists/${ownerID}`)
+            .send({ listName: "Unauthorized Change" });
+
+        expect(response.status).toBe(403);
+
+        const list = await prismaClient.list.findUnique({
+            where: { ownerID },
+        });
+
+        expect(list?.listName).toBe("My List");
     });
 });

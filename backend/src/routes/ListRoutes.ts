@@ -31,10 +31,11 @@ router.post("/", optionalAccessToken, async (req, res) => {
     }
 });
 
+
 router.patch("/:ownerID", optionalAccessToken, async (req, res) => {
     const auth0Sub = req.auth?.payload?.sub ?? null;
     const { ownerID } = req.params;
-    const { listName } = req.body ?? {};
+    const { listName, onlyThisAccount } = req.body ?? {};
 
     if (typeof ownerID !== "string" || !ownerID.trim()) {
         return res.status(400).json({
@@ -42,31 +43,83 @@ router.patch("/:ownerID", optionalAccessToken, async (req, res) => {
         });
     }
 
-    if (typeof listName !== "string" || !listName.trim()) {
+    // Both fields are optional, but at least one must be provided.
+    if (listName === undefined && onlyThisAccount === undefined) {
+        return res.status(400).json({
+            error: "At least one field must be provided.",
+        });
+    }
+
+    if (
+        listName !== undefined &&
+        (typeof listName !== "string" || !listName.trim())
+    ) {
         return res.status(400).json({
             error: "A valid listName is required.",
         });
     }
 
+    if (
+        onlyThisAccount !== undefined &&
+        typeof onlyThisAccount !== "boolean"
+    ) {
+        return res.status(400).json({
+            error: "onlyThisAccount must be a boolean.",
+        });
+    }
+
     try {
+        // Enforces existing owner-link/account access rules.
         await checkListAccess(auth0Sub, ownerID);
 
-        const list = await prismaClient.list.update({
+        const list = await prismaClient.list.findUnique({
             where: { ownerID },
-            data: {  listName: listName.trim(), },
+            select: {
+                auth0Sub: true,
+            },
         });
 
-        return res.status(200).json({
-            listName: list.listName,
+        if (!list) {
+            throw new ApiError(404, "List not found.");
+        }
+
+        // Only an authenticated owner can change this setting.
+        if (onlyThisAccount !== undefined) {
+            if (!list.auth0Sub || list.auth0Sub !== auth0Sub) {
+                throw new ApiError(
+                    403,
+                    "Only the account owner can change this setting."
+                );
+            }
+        }
+
+        const updatedList = await prismaClient.list.update({
+            where: { ownerID },
+            data: {
+                ...(listName !== undefined && {
+                    listName: listName.trim(),
+                }),
+                ...(onlyThisAccount !== undefined && {
+                    onlyThisAccount,
+                }),
+            },
+            select: {
+                listName: true,
+                onlyThisAccount: true,
+            },
         });
+
+        return res.status(200).json(updatedList);
     } catch (error) {
         return handleApiError(res, error);
     }
 });
 
-router.get("/load", async (req, res) => {
+
+router.get("/load", optionalAccessToken, async (req, res) => {
     const ownerID = typeof req.query.ownerID === "string" ? req.query.ownerID : null;
     const shareID = typeof req.query.shareID === "string" ? req.query.shareID : null;
+    const auth0Sub = req.auth?.payload?.sub ?? null;
 
     if (!ownerID && !shareID) {
         return res.status(400).json({
@@ -77,12 +130,14 @@ router.get("/load", async (req, res) => {
     try {
         let listData = null
         if(ownerID) {
+            await checkListAccess(auth0Sub, ownerID);
             listData = await prismaClient.list.findUnique({
                 where: {ownerID: ownerID},
                 select: {
                     listName: true,
                     ownerID: true,
                     shareID: true,
+                    onlyThisAccount: true,
                     // Everything auth0Sub
                     Item: {
                         select: {
