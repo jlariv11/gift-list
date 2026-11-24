@@ -4,5 +4,10 @@
        authorizationParameters: {
            audience: process.env.AUTH0_AUDIENCE,
            scope: process.env.AUTH0_SCOPE,
+           domain: process.env.AUTH0_DOMAIN,
+           clientId: process.env.AUTH0_CLIENT_ID,
+           clientSecret: process.env.AUTH0_CLIENT_SECRET,
+           secret: process.env.AUTH0_SECRET,
+           appBaseUrl: process.env.APP_BASE_URL,
        },
    });
