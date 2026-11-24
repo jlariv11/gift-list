@@ -1,0 +1,41 @@
+services:
+  backend:
+    image: ${BACKEND_IMAGE}
+    container_name: gift-list-backend
+    restart: unless-stopped
+
+    ports:
+      - "127.0.0.1:8080:8080"
+
+    environment:
+      NODE_ENV: production
+      POSTGRES_PRISMA_URL: postgresql://postgres:${POSTGRES_PASSWORD}@database:5432/giftlist
+
+    env_file:
+      - .env.production
+
+    depends_on:
+      database:
+        condition: service_healthy
+
+  database:
+    image: postgres:17
+    container_name: gift-list-database
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: giftlist
+
+    volumes:
+      - gift-list-postgres-data:/var/lib/postgresql/data
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d giftlist"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  gift-list-postgres-data:
