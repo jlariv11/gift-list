@@ -16,12 +16,10 @@ jobs:
       postgres:
         image: postgres:17
         env:
-          POSTGRES_PRISMA_URL: postgresql://postgres:postgres@localhost:5432/giftlist_test
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: giftlist_test
-          AUTH0_DOMAIN: example.auth0.com
-          AUTH0_AUDIENCE: https://giftlist-test-api
+
         ports:
           - 5432:5432
         options: >-
@@ -36,6 +34,8 @@ jobs:
 
     env:
       POSTGRES_PRISMA_URL: postgresql://postgres:postgres@localhost:5432/giftlist_test
+      AUTH0_DOMAIN: example.auth0.com
+      AUTH0_AUDIENCE: https://giftlist-test-api
 
     steps:
       - name: Checkout repository
