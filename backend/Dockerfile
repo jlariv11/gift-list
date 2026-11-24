@@ -6,11 +6,9 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 
-COPY prisma ./prisma
-
-RUN npx prisma generate
-
 COPY . .
+
+RUN POSTGRES_PRISMA_URL=postgresql://placeholder:placeholder@localhost:5432/placeholder npx prisma generate
 
 RUN npm run build
 
