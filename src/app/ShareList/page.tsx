@@ -1,5 +1,5 @@
 "use client"
-import {useContext, useEffect, useRef, useState} from "react";
+import {useEffect, useRef, useState} from "react";
 import {Item, saveSharedList} from "../database/SaveList";
 import ListButton from "../elements/ListButton";
 import {loadViewList} from "../database/LoadList";
@@ -7,7 +7,6 @@ import ItemElement from "../elements/ItemElement";
 import {useSearchParams} from "next/navigation";
 import WarningModal from "../components/WarningModal";
 import Modal from "../components/Modal";
-import {SessionContext} from "../SessionContext";
 import {getCookie, setCookie} from "../Cookies";
 import ShareTutorial, {TutorialState} from "./tutorial/ShareTutorial";
 import {HighlightSquare} from "./tutorial/HighlightSquare";
@@ -165,7 +164,7 @@ export default function ShareList() {
 
                         <p className="mt-2 text-sm text-muted">
                             Browse the gifts below and mark anything
-                            you'd like to purchase.
+                            you&apos;d like to purchase.
                         </p>
                     </header>
 
@@ -288,7 +287,7 @@ export default function ShareList() {
 
                                 <p className="mt-3 text-center text-xs leading-5 text-muted">
                                     Confirming will mark these gifts as purchased
-                                    so others don't buy the same ones.
+                                    so others don&apos;t buy the same ones.
                                 </p>
                             </div>
                         </section>

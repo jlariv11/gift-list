@@ -6,7 +6,7 @@ export default function AccessDenied() {
             </div>
 
             <h1 className="mb-3 text-2xl font-semibold">
-                You don't have access to this list
+                You don&apos;t have access to this list
             </h1>
 
             <p className="max-w-md text-gray-500">
