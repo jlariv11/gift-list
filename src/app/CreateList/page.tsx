@@ -99,6 +99,7 @@ export default function CreateList() {
         } else {
             setNewList(true);
             setCopiedEditLink(false);
+            setAccessDenied(false);
 
             createList(listName).then((id) => setOwnerID(id));
             hasAccessToken().then(setCopiedEditLink);
