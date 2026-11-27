@@ -1,6 +1,14 @@
 FROM node:22-alpine
 LABEL authors="Jake Lariviere"
 
+RUN apk add --no-cache ca-certificates curl
+
+RUN curl -fsSL \
+    https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem \
+    -o /etc/ssl/certs/rds-global-bundle.pem
+
+ENV NODE_EXTRA_CA_CERTS=/etc/ssl/certs/rds-global-bundle.pem
+
 WORKDIR /app
 
 COPY package*.json ./
