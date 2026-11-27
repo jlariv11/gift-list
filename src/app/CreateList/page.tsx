@@ -101,7 +101,7 @@ export default function CreateList() {
             setCopiedEditLink(false);
             setAccessDenied(false);
 
-            createList(listName).then((id) => setOwnerID(id));
+            createList(listName).then((data) => setOwnerID(data.ownerID));
             hasAccessToken().then(setCopiedEditLink);
         }
     }, []);
@@ -126,7 +126,7 @@ export default function CreateList() {
         }
     }, [dirtyItems]);
 
-    useEffect(() => {
+    function changeListName(){
         if (!ownerID || !listName) {
             return;
         }
@@ -137,7 +137,7 @@ export default function CreateList() {
         };
 
         updateListName(listData);
-    }, [listName]);
+    }
 
     function addItem(item: Item) {
         setDirtyItems([...dirtyItems, item]);
@@ -255,7 +255,7 @@ export default function CreateList() {
                                         setListName(e.target.value)
                                     }
                                     onBlur={() => {
-                                        listChanged();
+                                        changeListName();
                                         toggleChangesSaved();
                                     }}
                                 />
