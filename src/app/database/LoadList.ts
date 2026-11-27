@@ -55,7 +55,12 @@ export async function getShareID(ownerID: string){
 }
 
 export async function createShareID(ownerID: string){
-    const data = (await axios.post(ROUTES.CREATE_SHAREID, {ownerID})).data;
+    const token = await getOrIgnoreAccessToken();
+    const headers = token ? {Authorization: `Bearer ${token}`} : {};
+    const data = (await axios.post(ROUTES.CREATE_SHAREID,
+        {ownerID},
+        {headers: headers}
+    )).data;
     return data.shareID;
 }
 
