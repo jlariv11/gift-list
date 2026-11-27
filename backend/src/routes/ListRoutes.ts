@@ -159,10 +159,16 @@ router.get("/load", optionalAccessToken, async (req, res) => {
                     shareID: true,
                     // Everything except ownerID & auth0Sub
                     Item: {
+                        where: {
+                            itemQuantity: {
+                                gt: prismaClient.item.fields.itemQuantityPurchased,
+                            },
+                        },
                         select: {
                             itemID: true,
                             itemName: true,
                             itemQuantity: true,
+                            itemQuantityPurchased: true,
                             itemLink: true,
                             itemImageURL: true,
                             itemDescription: true,
