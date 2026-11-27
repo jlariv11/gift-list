@@ -2,7 +2,6 @@ import type { NextRequest } from "next/server";
 import { auth0 } from "@/lib/auth0";
 
 export async function middleware(request: NextRequest) {
-    console.log("ENV VAR EXISTS: ", process.env.AUTH0_DOMAIN !== undefined)
     return await auth0.middleware(request);
 }
 
